@@ -1,24 +1,26 @@
 # kmerator
 
-## A prototype for kmer decomposition and extraction of transcript or gene-specific kmers
+## A prototype for kmer decomposition and extraction of transcript or gene-specific k-mers
 
-Kmerator is a prototype tool designed for prediction of specific k-mers (tags) from an input sequence, considering the sequence of a reference genome and transcriptome. Kmerator use jellyfish to create two requestable indexes from these references, decompose your input sequence and count the occurences of each kmers of the input in the genome and transcriptome. The occurrences counts are then interpreted, in different manners, to select tags of the input.
+Kmerator is a prototype tool designed for prediction of specific k-mers (named tags) from an input sequence, considering the sequence of a reference genome and transcriptome. Kmerator use jellyfish to create two requestable indexes from these references, decompose your input sequence and count the occurences of each kmers of the input in the genome and transcriptome. The occurrences counts are then interpreted, and passed to different filters to select tags from the input.
 
 Kmerator strictly depends of an Ensembl Annotation, you can find it there : https://www.ensembl.org/info/data/ftp/index.html
 
 You’ll need a genome and a transcriptome, fasta format. You can reuse the jellyfish of the genome in the options. 
+For a more complete k-mer filtering, we advice to merge the coding (cDNA) and the non-coding (ncRNA) as one unique transcript reference.
 
-Interpretations of counts will differ, depending of the “level” option : 
+You can choose different k-mer filters with the “level” option : 
 - gene 
 - transcript 
 - chimeras (must not be fount in your reference, genome or transcriptome)
 
+If you want to use kmerator on unannotated RNA signatures, you have to use the -u option. In this case only "transcript" and "chimeras" levels are available.
+
 ## Dependencies :
 
-- Kmerator is a julia script : Julia => v1.1 (https://julialang.org/downloads/).
-- kmerator ask to install missing packages automatically so you may not install 
-Distributed, ParallelDataTransfer, ArgParse, FastaIO, JSON and HTTP packages.
-- Jellyfish 2.0
+- Kmerator is a julia script : Julia >= v1.4.2 (https://julialang.org/downloads/).
+- kmerator ask to install missing packages automatically so you may not install ParallelDataTransfer, ArgParse, FastaIO, JSON and HTTP packages.
+- Jellyfish >= v2.0
 
 
 ## Usage
@@ -61,7 +63,7 @@ kmerator.jl [--selection [SELECTION...]] [--appris APPRIS] [-u]
                         kmer request and transcriptional variant
                         informations
   -l, --level LEVEL     Type 'gene', 'transcript' or 'chimera' to
-                        extract specific kmer at these different
+                        extract tags at these different
                         levels. 'chimera' option must be done with
                         'unannotated' option!.
   -o, --output OUTPUT   directory of output (default: ".")
@@ -70,7 +72,7 @@ kmerator.jl [--selection [SELECTION...]] [--appris APPRIS] [-u]
   --threshold THRESHOLD
                         FOR GENE LEVEL ONLY : Minimum fraction of
                         annotated transcripts containing this kmer to
-                        admit a tag (default 0.5) (default: 0.5)
+                        admit a tag (default: 0.5)
   -p, --procs PROCS     Run n local processes
   -h, --help            show this help message and exit
 

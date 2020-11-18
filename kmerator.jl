@@ -13,13 +13,13 @@ println("
       VERSION v0.2.0
 
 Dependencies :
-- Julia language >= v1.2
+- Julia language >= v1.4.2
 - Jellyfish >= v2.0
 --------------------------------------------------")
 
 using Pkg
 
-packages = ("ArgParse", "Distributed", "ParallelDataTransfer", 
+packages = ("ArgParse", "ParallelDataTransfer", 
             "HTTP", "JSON", "FastaIO")
 
 
