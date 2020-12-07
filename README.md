@@ -4,7 +4,7 @@
 
 Kmerator is a prototype tool designed for the prediction of specific k-mers (also called tags) from input sequences, considering a reference genome and an ENSEMBL-like transcriptome. From these specific k-mers, it also outputs their corresponding specific contigs which are sequences of consecutive k-mers (overlapping length between k-mers must be k-1, otherwise, it's a new contig). Kmerator first uses Jellyfish [1] to create 2 requestable indexes from the reference genome and transcriptome, and second, decomposes your input transcript or gene sequences to count the occurences of each k-mer in the genome and transcriptome. Number of occurrences are then interpreted, in different manners, to select specific k-mer from your input. 
 
-Kmerator strictly depends on a reference genome (fasta or jellyfish index format) and on an Ensembl fasta format transcriptome, you can find it there: https://www.ensembl.org/info/data/ftp/index.html
+Kmerator strictly depends on a reference genome (fasta or jellyfish index format) and on an Ensembl fasta format transcriptome, you can find it there: https://www.ensembl.org/info/data/ftp/index.html. For a more complete k-mer filtering, we advice to merge the coding (cDNA) and non-coding (ncRNA) as one unique reference transcript.
 
 Interpretation of occurrences counts differs depending on the ''level'' option : 
 
@@ -12,12 +12,13 @@ Interpretation of occurrences counts differs depending on the ''level'' option :
 - transcript 
 - chimeras (must not be found in your reference genome and transcriptome)
 
+If you want to use Kmerator on unannotated RNA signatures, you have to use the -u option. In this case, only "transcript" and "chimeras" levels are available.
 
 ## Dependencies
 
-- Julia >= v1.1 (https://julialang.org/downloads/)
-- Kmerator will automatically ask you to install missing required packages : Distributed, ParallelDataTransfer, ArgParse, FastaIO, JSON and HTTP.
-- Jellyfish 2.0
+- Julia >= v1.4.2 (https://julialang.org/downloads/)
+- Kmerator will automatically ask you to install missing required packages: ParallelDataTransfer, ArgParse, FastaIO, JSON and HTTP.
+- Jellyfish >= 2.0
 
 
 ## Usage
@@ -76,7 +77,7 @@ kmerator.jl [--selection [SELECTION...]] [-f SEQUENCES] [--appris SPECIE]
   -o, --output OUTPUT   
   						your output directory (default is current directory).
   --length LENGTH       
-  						k-mer length that you want to use (default 31).
+  						k-mer length that you want to use (type Int64, default 31).
   --threshold THRESHOLD
                         FOR GENE LEVEL ONLY: minimum fraction of annotated 
                         transcripts, from a given gene, containing this k-mer to 
@@ -85,8 +86,8 @@ kmerator.jl [--selection [SELECTION...]] [-f SEQUENCES] [--appris SPECIE]
   						run n local processes.
   -h, --help            
   						show help message and exit.
-
 ```
+
 ## References
 
 [1] Guillaume Marçais, Carl Kingsford, A fast, lock-free approach for efficient parallel counting of occurrences of k-mers, Bioinformatics, Volume 27, Issue 6, 15 March 2011, Pages 764–770, https://doi.org/10.1093/bioinformatics/btr011

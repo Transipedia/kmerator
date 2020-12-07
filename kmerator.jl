@@ -14,15 +14,15 @@ println("
       VERSION v0.2.1
 
 Dependencies :
-- Julia language >= v1.2
+- Julia language >= v1.4.2
 - Jellyfish >= v2.0
 --------------------------------------------------")
 
 ## Pkg = Julia's builtin package manager (installing, updating and removing packages)
 using Pkg
-packages = ("ArgParse", "Distributed", "ParallelDataTransfer", 
-            "HTTP", "JSON", "FastaIO")
 
+packages = ("ArgParse", "ParallelDataTransfer", 
+            "HTTP", "JSON", "FastaIO")
 
 ## Evaluate and install package if missing
 function check_installed_pkg()
