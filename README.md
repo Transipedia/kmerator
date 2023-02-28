@@ -19,7 +19,7 @@ Before using kmerator, a jellyfish index of the reference genome must be created
 
 ## Dependencies
 
-- Python >= v3.6
+- Python >= v3.7
 - Jellyfish >= 2.0
 
 
@@ -30,7 +30,7 @@ Before using kmerator, a jellyfish index of the reference genome must be created
 Install with pip
 
 ```
-pip3 install kmerator3
+pip3 install kmerator
 ```
 
 ### Solution 2
