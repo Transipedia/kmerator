@@ -1,0 +1,10 @@
+# include all files in img directory
+graft img
+
+# exclude all files in directory
+prune dev
+prune output
+
+# exclude files anywere
+global-exclude __pycache__
+global-exclude *.py[co]
