@@ -65,15 +65,16 @@ def main():
     transcriptome_dict = None        # not used with --fasta-file option
     geneinfo_dict = None            # not used with '--fasta-file' option
 
-    ### when --selection option is set
+    ### load transcriptome if --selection option is set
     if args.selection:
         ### create shared objects among multiple processes with Manager()
-        geneinfo_dict, transcriptome_dict = dataset.load()
-        ### Find transcripts according the selection
-        find_items(args, items, report, geneinfo_dict)
-    else:
-        find_items(args, items, report)
+        transcriptome_dict = dataset.load_transcriptome()
 
+    ### load geneinfo
+    geneinfo_dict = dataset.load_geneinfo()    
+    ### Find transcripts according the selection
+    find_items(args, items, report, geneinfo_dict)
+    
     ### get specific kmers (using multithreading)
     print(f" 🧬 Extract specific kmers, please wait..")
     SpecificKmers(args, report, items, transcriptome_dict, geneinfo_dict)

@@ -100,8 +100,8 @@ def usage(conf):
                         action='store_true',
                         help=(
                             "Only for genes with '--selection' option: use this option if you want "
-                            "to select gene-specific k-mers present in ALL known transcripts for"
-                            "your gene. If false, a k-mer is considered as gene-specific if present"
+                            "to select gene-specific k-mers present in ALL transcripts for your "
+                            "gene. If false, a k-mer is considered as gene-specific if present "
                             "in at least one isoform of your gene of interest."
                             ),
                         )

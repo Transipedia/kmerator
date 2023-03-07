@@ -109,7 +109,7 @@ class Dataset:
                 exit.gracefully(self.args)
             ask = 'y'
             if not self.args.yes:
-                ask = input(f" {YELLOW}Last local Release found in dataset is {max(local_releases)}. Continue with it? (Yn): {ENDCOL}") or 'y'
+                ask = input(f" {YELLOW}Last local Release found in datasets is {max(local_releases)}. Continue with it? (Yn): {ENDCOL}") or 'y'
             if ask.lower() == 'y':
                 self.ebl_releases = local_releases  # this is a lie :)
                 return
@@ -142,7 +142,7 @@ class Dataset:
     def get_local_releases(self):
         return {int(i.split('.')[2]) for i in next(os.walk(self.args.datadir))[2] if i.split('.')[0] == self.args.specie}
 
-
+    '''
     def load(self):
         """ Load dataset as dict (geneinfo and transcriptome)"""
         ### if dataset not found, ask to install
@@ -155,6 +155,30 @@ class Dataset:
         with open(self.transcriptome_pkl, 'rb') as fic:
             transcriptome_dict = pickle.load(fic)
         return geneinfo_dict, transcriptome_dict
+    '''
+
+    def load_geneinfo(self):
+        """ Load geneinfo.pkl as dict"""
+        ### if dataset not found, ask to install
+        if not self.dataset_ok:
+            self.build()
+        ### Load geneinfo
+        with open(self.geneinfo_pkl, 'rb') as fic:
+            geneinfo_dict = pickle.load(fic)
+            self.args.assembly = geneinfo_dict['assembly']
+        return geneinfo_dict
+
+
+    def load_transcriptome(self):
+        """ Load geneinfo.pkl as dict"""
+        ### if dataset not found, ask to install
+        if not self.dataset_ok:
+            self.build()
+        ### Load transcriptome
+        with open(self.transcriptome_pkl, 'rb') as fic:
+            transcriptome_dict = pickle.load(fic)
+        return transcriptome_dict
+
 
 
     def dataset_here(self):

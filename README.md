@@ -1,8 +1,8 @@
 # Kmerator
 
-
 ## Prototype for decomposition of transcript or gene sequences and extraction of their specific k-mers
 
+ref: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8221386/>
 
 Kmerator is a prototype tool designed for the prediction of specific k-mers (also called tags) from input sequences, considering a reference genome and an ENSEMBL-like transcriptome. From these specific k-mers, it also outputs their corresponding specific contigs which are sequences of consecutive k-mers (overlapping length between k-mers must be k-1, otherwise, it's a new contig). Kmerator first uses Jellyfish [1] to create 2 requestable indexes from the reference genome and transcriptome, and second, decomposes your input transcript or gene sequences to count the occurences of each k-mer in the genome and transcriptome. Number of occurrences are then interpreted, in different manners, to select specific k-mer from your input. 
 
@@ -11,11 +11,11 @@ Before using kmerator, a jellyfish index of the reference genome must be created
 
 #### Specific kmers
 
-![](img/specific-kmers.png)
+![](https://github.com/Transipedia/kmerator/raw/main/img/specific-kmers.png)
 
-#### Specific config
+#### Specific contigs
 
-![](img/specific-contigs.png)
+![](https://github.com/Transipedia/kmerator/raw/main/img/specific-contigs.png)
 
 ## Dependencies
 

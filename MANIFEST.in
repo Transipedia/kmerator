@@ -1,5 +1,5 @@
 # include all files in img directory
-graft img
+# graft img
 
 # exclude all files in directory
 prune dev
