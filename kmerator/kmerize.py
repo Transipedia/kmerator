@@ -48,7 +48,11 @@ class SpecificKmers:
         level = 'transcript' if type == 'transcript' else 'gene'
 
         ### 1. Get sequence of the transcript (from the transcriptome)
-        seq = self.transcriptome_dict[ENST]
+        try:
+            seq = self.transcriptome_dict[ENST]
+        except KeyError:
+            mesg = f"{given}: transcript not found in transcriptome ({ENST})."
+            return 'failed', mesg
         if len(seq) < self.args['kmer_length']:
             mesg = f"{given}: sequence to short ({len(seq)} < {self.args['kmer_length']})."
             return 'failed', mesg
@@ -159,7 +163,7 @@ class SpecificKmers:
             contig_outfile = f"{f_id}-transcript-specific_contigs.fa"
 
 
-        i = 0
+        i = 1
         for mer, abund_in_tr in kmercounts_transcriptome_dict.items():
 
             kmer_pos = i
@@ -218,7 +222,7 @@ class SpecificKmers:
                             contig += mer[-1]
                             kmer_pos_prev = kmer_pos
                         else:                                           # store contig and create new
-                            specific_contigs.append(f">{given_up}:{transcript}.contig{c_nb} (at position {kmer_pos}\n{contig}")
+                            specific_contigs.append(f">{given_up}:{transcript}.contig{c_nb} (at position {kmer_pos})\n{contig}")
                             c_nb += 1
                             contig = mer
                             kmer_pos_prev = kmer_pos

@@ -7,7 +7,7 @@ Genral informations on to the program.
 APPNAME = "kmerator"
 SHORTDESC = "Find specific gene or transcript kmers. And more."
 LICENCE = "GPL3"
-VERSION = "0.7.0-beta"
+VERSION = "0.7.1-beta"
 AUTHOR = 'Sébastien RIQUIER, IRMB, Montpellier'
 AUTHOR_EMAIL = "sebastien.riquier@ucd.ie"
 CONTIBUTORS = [
@@ -15,7 +15,7 @@ CONTIBUTORS = [
     'Benoit GUIBERT <benoit.guibert@inserm.fr>',
 ]
 DOC = f"""
-------------------------------------------------------
+-------------------------------------------------
                                    _
  ____  __.                        | |
 |    |/ _| ___ _ _   __  ___  __ _| |_ ___  _ __
@@ -23,11 +23,10 @@ DOC = f"""
 |    |  \ | | | | ||  __/ |   (_| | || (_) | |
 |____|__ \|_| |_| |_\___|_|  \__,_|\__\___/|_|
         \/
-
  Version: v{VERSION}
  Dependencies:
    - Jellyfish >= v2.0
-------------------------------------------------------
+-------------------------------------------------
 """
 
 EXAMPLES = f"""

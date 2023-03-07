@@ -56,7 +56,7 @@ def main():
 
 
     ### load kmerator geneinfo file as dict
-    print(f" 🧬 Load dataset.")
+    print(f" 🧬 Load dataset {args.release!r}.")
 
     ### Important objects
     items = []                      # {given: xxx, ENST: xxx, ENSG: xxx, symbol: xxx, type: xxx}
@@ -129,9 +129,10 @@ def find_items(args, items, report, geneinfo_dict=None):
             elif item in geneinfo_dict['gene']:
                 found_count += 1
                 ENSG = item
+                print(item)
                 items.append({'given':  given, 'ENSG': ENSG, 'type': 'gene',
                                     'ENST':   geneinfo_dict['gene'][ENSG]['canonical'],
-                                    'symbol': geneinfo_dict['gene'][ENSG]['symbol'],
+                                    'symbol': geneinfo_dict['gene'][ENSG].get('symbol', 'N/A'),
                                     })
             elif item in geneinfo_dict['transcript']:
                 found_count += 1

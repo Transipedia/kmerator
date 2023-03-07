@@ -97,8 +97,26 @@ class Dataset:
 
 
     def get_ebl_releases(self):
-        """ get avalable releases on Ensembl, limited to 90 """
-        r = requests.get(self.base_url)
+        """ get avalaible releases on Ensembl, limited to 90 """
+        try:
+            r = requests.get(self.base_url)
+        except requests.exceptions.ConnectionError:
+            ### If no connection to Ensembl, suggest to use last local Release
+            print(f"{YELLOW} Error connecting to Ensembl.{ENDCOL}")                
+            local_releases = self.get_local_releases()                    
+            if not local_releases:
+                print(f"{YELLOW} No dataset found in {self.args.datadir!r}, exit.")
+                exit.gracefully(self.args)
+            ask = 'y'
+            if not self.args.yes:
+                ask = input(f" {YELLOW}Last local Release found in dataset is {max(local_releases)}. Continue with it? (Yn): {ENDCOL}") or 'y'
+            if ask.lower() == 'y':
+                self.ebl_releases = local_releases  # this is a lie :)
+                return
+            else:
+                print("Aborted by user.")
+                exit.gracefully(self.args)
+
         ### If an error occur connecting to Ensembl, use the last local release avalaible.
         if not r.ok:
             all_files = next(os.walk(self.args.datadir))[2]
@@ -107,9 +125,9 @@ class Dataset:
             if not self.args.yes:
                 print(f"{YELLOW} Error connecting to Ensembl (code {r.status_code}).")
                 if not self.ebl_releases:
-                    print(f" No dataset found in {self.args.datadir!r}, exit")
-                    exit.gracefully(args)
-                ask = input(f" Do you want to continue with release {str(max(self.ebl_releases))!r}? (Yn): {ENDCOL}") or 'y'
+                    print(f" No dataset found in {self.args.datadir!r}, exit.{ENDCOL}")
+                    exit.gracefully(self.args)
+                ask = input(f" {YELLOW}Do you want to continue with release {str(max(self.ebl_releases))!r}? (Yn): {ENDCOL}") or 'y'
             if ask.lower() == 'y':
                 return
             else:
@@ -146,7 +164,10 @@ class Dataset:
         """
         attended  = ['transcriptome_pkl', 'transcriptome_jf', 'geneinfo_pkl', 'report_md']
         found = 0
-        all_files = next(os.walk(self.args.datadir))[2]
+        try:
+            all_files = next(os.walk(self.args.datadir))[2]
+        except StopIteration:
+            sys.exit(f"{RED}Error: unable to reach {self.args.datadir!r}.{ENDCOL}")
         ### dict of releases : {specie: {release:[file1, file2]} }
         for file in all_files:
             try:
