@@ -173,10 +173,10 @@ class SpecificKmers:
                 ### if the kmer is present/unique or does not exist (splicing?) on the genome
                 if abund_in_ge <= 1:
 
-                    isoforms_whith_mer = [enst for enst, seq in isoforms_dict.items() if mer in seq]
-                    isoforms_whith_mer_nb = len(isoforms_whith_mer)
+                    isoforms_with_mer = [enst for enst, seq in isoforms_dict.items() if mer in seq]
+                    isoforms_with_mer_nb = len(isoforms_with_mer)
 
-                    # knb, specific_kmers, given_up, transcript, kmer_pos, isoforms_whith_mer_nb,
+                    # knb, specific_kmers, given_up, transcript, kmer_pos, isoforms_with_mer_nb,
                     # isoforms_nb, mer, contig, kmer_pos_prev, kmer_pos, contig_pos
 
                     '''
@@ -186,13 +186,13 @@ class SpecificKmers:
                         - string to pass are not already the same
                         - WARNING of performances losses
                     '''
-                    ### all kmers found must (abund_in_tr) must be in isoforms
-                    if not args['stringent'] and abund_in_tr and abund_in_tr == isoforms_whith_mer_nb:
+                    ### all kmers found (abund_in_tr) must be in isoforms
+                    if not args['stringent'] and abund_in_tr and abund_in_tr == isoforms_with_mer_nb:
 
                         # ~ handle_kmers(**params)
                         ## kmers case
                         knb += 1
-                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ({isoforms_whith_mer_nb}/{isoforms_nb})\n{mer}")
+                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ({isoforms_with_mer_nb}/{isoforms_nb})\n{mer}")
                         ## contigs case
                         if knb == 1:                                    # first kmer in contig
                             contig = mer
@@ -210,10 +210,10 @@ class SpecificKmers:
 
 
                     ### for gene level only, the stringent argument implies retaining kmers present in ALL isoforms of the gene
-                    elif args['stringent'] and abund_in_tr == isoforms_nb == isoforms_whith_mer_nb:
+                    elif args['stringent'] and abund_in_tr == isoforms_nb == isoforms_with_mer_nb:
                         ## kmers case
                         knb += 1
-                        specific_kmers.append(f">{given_up}:{transcript}.kmer{kmer_pos} ({isoforms_whith_mer_nb}/{isoforms_nb})\n{mer}")
+                        specific_kmers.append(f">{given_up}:{transcript}.kmer{kmer_pos} ({isoforms_with_mer_nb}/{isoforms_nb})\n{mer}")
                         ## contigs case
                         if knb == 1:                                    # first kmer in contig
                             contig = mer
@@ -226,7 +226,6 @@ class SpecificKmers:
                             c_nb += 1
                             contig = mer
                             kmer_pos_prev = kmer_pos
-
 
             ### Cases of transcripts 1) unannotated, 2) annotated.
             elif level == 'transcript':
@@ -299,7 +298,7 @@ class SpecificKmers:
         if args['fasta_file'] and contig:
             specific_contigs.append(f">{f_id}.contig{c_nb} (at position {contig_pos})\n{contig}")
         elif level == "gene" and contig:
-            specific_contigs.append(f">{given_up}:{ENST}.contig{c_nb} (at position {kmer_pos}\n{contig}")
+            specific_contigs.append(f">{given_up}:{ENST}.contig{c_nb} (at position {contig_pos})\n{contig}")
         elif level == "transcript" and contig:
             specific_contigs.append(f">{ENST}.contig{c_nb} (at position {contig_pos})\n{contig}")
 
@@ -343,7 +342,7 @@ def handle_kmers(**kwargs):
     print("LOCALS():", locals())
     ## kmers case
     knb += 1
-    specific_kmers.append(f">{given_up}:{given_up}.kmer{kmer_pos} ({isoforms_whith_mer_nb}/{isoforms_nb})\n{mer}")
+    specific_kmers.append(f">{given_up}:{given_up}.kmer{kmer_pos} ({isoforms_with_mer_nb}/{isoforms_nb})\n{mer}")
     ## contigs case
     if knb == 1:                                    # first kmer in contig
         contig = mer

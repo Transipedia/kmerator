@@ -130,7 +130,6 @@ def find_items(args, items, report, geneinfo_dict=None):
             elif item in geneinfo_dict['gene']:
                 found_count += 1
                 ENSG = item
-                print(item)
                 items.append({'given':  given, 'ENSG': ENSG, 'type': 'gene',
                                     'ENST':   geneinfo_dict['gene'][ENSG]['canonical'],
                                     'symbol': geneinfo_dict['gene'][ENSG].get('symbol', 'N/A'),
@@ -280,7 +279,7 @@ def markdown_report(args, report):
                 # ~ for k,v in mesg.items():
                     # ~ fh.write(f"- {k}: {' '.join(v)}\n")
         if report['failed']:
-            fh.write(f"\n\n**Genes/transcript missing ({len(report['failed'])})**\n\n")
+            fh.write(f"\n\n**Genes/transcripts missing ({len(report['failed'])})**\n\n")
             for mesg in report['failed']:
                 fh.write(f"- {mesg}\n")
         if report['warning']:
