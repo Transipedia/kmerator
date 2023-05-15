@@ -289,7 +289,7 @@ class Dataset:
                 item = f"{file[3]}.{file[4]}"
                 releases.setdefault(specie, {}).setdefault(release, []).append(item)
             except IndexError:
-                print(f"{DEBUG} Error: {'.'.join(file)!r} improperly formated.{ENDCOL}")
+                print(f"{DEBUG} Comment: {'.'.join(file)!r} is not a Dataset file.{ENDCOL}")
 
         ### classify the releases (complete or incomplete)
         releases_ok = {}

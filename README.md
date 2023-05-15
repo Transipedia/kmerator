@@ -45,7 +45,7 @@ ln -s $PWD/kmerator3/kmerator/kmerator.py /usr/local/bin/kmerator  # or somewher
 
 ## How to use kmerator
 
-Before all, remember that kmerator needs a jellyfish index of the genome. You must build it according to the species you are studying.
+Before all, remember that kmerator needs a jellyfish index of the genome. You must build it according to the species you are studying. You can store and name the index file whatever you want.
 
 ### Configuration file
 
@@ -69,9 +69,9 @@ There are two main cases:
 **Examples:**
 
 ```
-kmerator -s npm1 brca2 ENST00000255409 ENSG00000159216      # you can mix genes and transcripts
-kmerator -s genes.txt   									 # you can also use a file with gene list
-kmerator -f file.fa     									 # give a fasta file fr unannotated sequences
+kmerator -s npm1 brca2 ENST00000255409 ENSG00000159216    # you can mix genes and transcripts
+kmerator -s genes.txt                                     # you can also use a file with gene list
+kmerator -f file.fa                                       # give a fasta file fr unannotated sequences
 ```
 
 **Note** the above commands assume that the configuration file contains at least the `datadir` and `genome` directives, the default species is homo_sapiens and the last available version will be used (if it is not present in datadir, kmerator will propose the construction of a dataset automatically)
@@ -87,10 +87,10 @@ kmerator -f file.fa     									 # give a fasta file fr unannotated sequences
 To work, kmerator needs a jellyfish index of the genome, a jellyfish index of the transcriptome and various files. You will have to make the jellyfish genome index manually. Instead, kmerator builds the jellyfish transcriptome index and the files it needs, which we call datasets. There is one dataset per species and per transcriptome version. When kemrator does not find (in datadir) the requested transcriptome release (by default, the latest available on Ensembl), it offers to automatically build the dataset in question. In addition, dataset management options are available:
 
 ```
-kmerator -l				# list local datasets
-kmerator -u				# find last release on Ensembl, and build dataset if not present
-kmerator --mk-dataset	# build dataset according to -r <release> and -S <specie> arguments
-kmerator --rm-dataset	# delete dataset according to -r <release> and -S <specie> arguments
+kmerator -l            # list local datasets
+kmerator -u            # find last release on Ensembl, and build dataset if not present
+kmerator --mk-dataset  # build dataset according to -r <release> and -S <specie> arguments
+kmerator --rm-dataset  # delete dataset according to -r <release> and -S <specie> arguments
 ```
 
 

@@ -120,7 +120,7 @@ def usage(conf):
                         default=1,
                         )
     parser.add_argument('--tmpdir',
-                        help="directory to temporary file (default: /tmp/kmerator_<random>",
+                        help="directory to temporary file (default: /tmp/kmerator_<random>)",
                         default=None,
                         )
     parser.add_argument('-D', '--debug',
@@ -229,8 +229,8 @@ def checkup_args(args):
                 for line in fh:
                     args.selection += line.split('#')[0].split()
     ### --genome - check jellifish genome
-    if not args.genome[-3:] == '.jf':
-        sys.exit(f"{ERROR}Error: file not a jellyfish index ({args.genome.name!r}).{ENDCOL}")
+    # ~ if not args.genome[-3:] == '.jf':
+        # ~ sys.exit(f"{ERROR}Error: file not a jellyfish index ({args.genome!r}).{ENDCOL}")
     ### --chimera level works only with --fasta-file option
     if args.chimera and not args.fasta_file:
         sys.exit(f"{ERROR}Error: '--chimera' needs '--fasta-file' option.{ENDCOL}")
@@ -238,12 +238,12 @@ def checkup_args(args):
     if not args.keep:
         if not args.tmpdir:
             args.tmpdir = tempfile.mkdtemp(prefix="kmerator_")
-        elif not os.isdir(args.tmpdir):
+        elif not os.path.isdir(args.tmpdir):
             sys.exit(f"{ERROR}Error: temporary directory not found ({args.tmpdir}).{ENDCOL}")
+        else:
+            args.tmpdir = tempfile.mkdtemp(prefix="kmerator_", dir=args.tmpdir)
     else:
         args.tmpdir = args.output
-
-
 
 
 '''

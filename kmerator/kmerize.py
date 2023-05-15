@@ -106,11 +106,14 @@ class SpecificKmers:
         From sequence, compute jellyfish againt the genome/transcriptome and convert results as dict ()
         """
         if self.args['debug']: print(f"{YELLOW}start jellyfish on {os.path.basename(seq_file)} against {os.path.basename(jf_file)}{ENDCOL}")
-        cmd = (f"jellyfish query -s '{seq_file}' {jf_file}")
+        cmd = f"jellyfish query -s '{seq_file}' {jf_file}"
         try:
-            result = subprocess.run(cmd, shell=True, check=True, capture_output=True).stdout.decode().rstrip().split('\n')
-        except subprocess.CalledProcessError:
-            sys.exit(f"{RED}Error: an error occured in jellyfish query command:\n  {cmd}{ENDCOL}")
+            # ~ result = subprocess.run(cmd, shell=True, check=True, capture_output=True).stdout.decode().rstrip().split('\n')
+            result = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT).rstrip('\n').split('\n')
+        except subprocess.CalledProcessError as err:
+            sys.exit(f"{ERROR}Error: executing jellyfish:\n"
+                     f"  {ERROR}command: {ENDCOL}{cmd}\n"
+                     f"  {ERROR}returned: {ENDCOL}{err.output}")
         result_dict = dict([ (b[0], int(b[1])) for b in [a.split() for a in result]])
         return result_dict
 
