@@ -155,6 +155,10 @@ def usage(conf):
                         action='store_true',
                         help="make a dataset, according with --specie and --release options",
                       )
+    exclusive.add_argument('--last-avail', '--last-available',
+                        action='store_true',
+                        help="last release available on Ensembl",
+                       )
     exclusive.add_argument('-u', '--update-dataset',
                         action="store_true",
                         help="builds a new dataset if a new version is found on Ensembl",

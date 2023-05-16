@@ -52,6 +52,7 @@ def main():
     if args.list_dataset: dataset.list()
     if args.rm_dataset: dataset.remove()
     if args.mk_dataset: dataset.make()
+    if args.last_avail: dataset.last_available()
     if args.update_dataset: dataset.update_last()
 
 
@@ -71,10 +72,10 @@ def main():
         transcriptome_dict = dataset.load_transcriptome()
 
     ### load geneinfo
-    geneinfo_dict = dataset.load_geneinfo()    
+    geneinfo_dict = dataset.load_geneinfo()
     ### Find transcripts according the selection
     find_items(args, items, report, geneinfo_dict)
-    
+
     ### get specific kmers (using multithreading)
     print(f" 🧬 Extract specific kmers, please wait..")
     SpecificKmers(args, report, items, transcriptome_dict, geneinfo_dict)

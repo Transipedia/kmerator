@@ -54,6 +54,8 @@ def main():
         dataset.remove()
     elif args.mk_dataset:
         dataset.make()
+    elif args.last_avail:
+        dataset.last_available()
     elif args.load:
         geneinfo_dict, transcriptome_dict = dataset.load()
         for type in ('gene', 'symbol', 'alias', 'transcript'):
@@ -93,7 +95,8 @@ class Dataset:
             self.get_ebl_releases()
             self.args.release = str(max(self.ebl_releases))
         ### check if dataset is locally present and assign variable for each file
-        self.dataset_ok = self.dataset_here()
+        if args.datadir:
+            self.dataset_ok = self.dataset_here()
 
 
     def get_ebl_releases(self):
@@ -102,8 +105,8 @@ class Dataset:
             r = requests.get(self.base_url)
         except requests.exceptions.ConnectionError:
             ### If no connection to Ensembl, suggest to use last local Release
-            print(f"{YELLOW} Error connecting to Ensembl.{ENDCOL}")                
-            local_releases = self.get_local_releases()                    
+            print(f"{YELLOW} Error connecting to Ensembl.{ENDCOL}")
+            local_releases = self.get_local_releases()
             if not local_releases:
                 print(f"{YELLOW} No dataset found in {self.args.datadir!r}, exit.")
                 exit.gracefully(self.args)
@@ -178,7 +181,6 @@ class Dataset:
         with open(self.transcriptome_pkl, 'rb') as fic:
             transcriptome_dict = pickle.load(fic)
         return transcriptome_dict
-
 
 
     def dataset_here(self):
@@ -387,8 +389,15 @@ class Dataset:
         exit.gracefully(self.args)
 
 
+    def last_available(self):
+        # ~ self.get_ebl_releases()
+        print(max(self.ebl_releases))
+        exit.gracefully(self.args)
+
+
 def usage():
     parser = argparse.ArgumentParser()
+    exclusive = parser.add_mutually_exclusive_group(required=True)
     ### OPTION
     parser.add_argument('-S', '--specie',
                         help=(
@@ -403,14 +412,14 @@ def usage():
                         help="release of transcriptome (default: last).",
                         default="last",
                         )
-    parser.add_argument('-d', '--datadir',
+    exclusive.add_argument('-d', '--datadir',
                         help=(
                             "Directory where kmerator file are stored. Files are:"
                             "\n - fasta file of modified transcriptome (fa)"
                             "\n - jellyfish of this transcriptome (jf)"
                             "\n - metadata file like gene-symbols or aliases, "
                             ),
-                        required = True,
+                        # ~ required = True,
                         )
     parser.add_argument('-l', '--list-dataset', '--datasets',
                         action="store_true",
@@ -449,6 +458,10 @@ def usage():
                         type=int,
                         help="kmer length (default: 31)",
                         default=31,
+                       )
+    exclusive.add_argument('--last-avail', '--last-available',
+                        action='store_true',
+                        help="last release available on Ensembl",
                        )
     parser.add_argument('--keep',
                         action='store_true',
