@@ -151,13 +151,14 @@ def find_items(args, items, report, geneinfo_dict=None):
 
     ### With '--fasta-file' option
     if args.fasta_file:
+        type = 'chimera' if args.chimera else 'transcript'
         with open(args.fasta_file) as fh:
             seq = ""
             f_id = fh.readline()[1:].split(' ')[0].rstrip()
             for raw in fh:
                 if raw.startswith('>'):
                     if len(seq) >= args.kmer_length:
-                        items.append({'f_id': f_id, 'seq': seq, 'type': 'transcript'})
+                        items.append({'f_id': f_id, 'seq': seq, 'type': type})
                     else:
                         report['failed'].append(f"{f_id}: sequence to short ({len(seq)} < {args.kmer_length})")
                     f_id = raw[1:].split(' ')[0].rstrip()
@@ -166,7 +167,7 @@ def find_items(args, items, report, geneinfo_dict=None):
                     seq += raw.rstrip()
             ### last f_id/sequence
             if len(seq) >= args.kmer_length:
-                items.append({'f_id': f_id, 'seq': seq, 'type': 'transcript'})
+                items.append({'f_id': f_id, 'seq': seq, 'type': type})
             else:
                 report['failed'].append(f"{f_id}: sequence to short ({len(seq)} < {args.kmer_length})")
 

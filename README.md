@@ -4,7 +4,7 @@
 
 ref: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8221386/>
 
-Kmerator is a prototype tool designed for the prediction of specific k-mers (also called tags) from input sequences, considering a reference genome and an ENSEMBL-like transcriptome. From these specific k-mers, it also outputs their corresponding specific contigs which are sequences of consecutive k-mers (overlapping length between k-mers must be k-1, otherwise, it's a new contig). Kmerator first uses Jellyfish [1] to create 2 requestable indexes from the reference genome and transcriptome, and second, decomposes your input transcript or gene sequences to count the occurences of each k-mer in the genome and transcriptome. Number of occurrences are then interpreted, in different manners, to select specific k-mer from your input. 
+Kmerator is a prototype tool designed for the prediction of specific k-mers (also called tags) from input sequences, considering a reference genome and an ENSEMBL-like transcriptome. From these specific k-mers, it also outputs their corresponding specific contigs which are sequences of consecutive k-mers (overlapping length between k-mers must be k-1, otherwise, it's a new contig). You need to provide kmerator with a jellifsh index of the reference genome. Kmerator itself builds a jellyfish index of the reference transcriptome (by default the latest available version of Ensembl). It then  decomposes your input transcript or gene sequences to count the occurences of each k-mer in the genome and transcriptome. Number of occurrences are then interpreted, in different manners, to select specific k-mer from your input. 
 
 Before using kmerator, a jellyfish index of the reference genome must be created. kmerator automatically creates a dataset according to the species and the desired release number (by default, homo_sapiens and the latest version). The dataset is composed of 4 files per species/version: a jellyfish index of the modified transcriptome (cDNA + ncRNA - alternative chormosomes) from Ensembl, a binary file representing the same transcriptome, another binary file containing general information on the genes of the transcriptome and a report file.
 
@@ -45,7 +45,7 @@ ln -s $PWD/kmerator3/kmerator/kmerator.py /usr/local/bin/kmerator  # or somewher
 
 ## How to use kmerator
 
-Before all, remember that kmerator needs a jellyfish index of the genome. You must build it according to the species you are studying. You can store and name the index file whatever you want.
+Before all, remember that kmerator needs a jellyfish index of the genome. You must build it according to the species you are studying. You can store and name the index file whatever you want. Please note that you must **not use the jellyfish -C option** when building the reference genome index.
 
 ### Configuration file
 

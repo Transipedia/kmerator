@@ -1,7 +1,13 @@
 ### kmerize.py
 
+"""
+https://stackoverflow.com/questions/44587669/python-multiprocessing-how-to-close-the-multiprocessing-pool-on-exception
+https://stackoverflow.com/questions/47903791/how-to-terminate-a-multiprocess-in-python-when-a-given-condition-is-met
+"""
+
 import os
 import sys
+import shutil
 import subprocess
 import multiprocessing
 import copy
@@ -31,13 +37,19 @@ class SpecificKmers:
 
         ### launch workers
         self.transcriptome_file = os.path.join(args.datadir, f"{args.specie}.{args.assembly}.{args.release}.transcriptome.jf")
-        with multiprocessing.Pool(processes=args.thread) as pool:
-            if args.selection:
-                messages = pool.map(self.worker_selection, items)
-            elif args.fasta_file:
-                messages = pool.map(self.worker_fasta_file, items)
-        for type,mesg in messages:
-            report[type].append(mesg)
+        try:
+            with multiprocessing.Pool(processes=args.thread) as pool:
+                if args.selection:
+                    messages = pool.map(self.worker_selection, items)
+                elif args.fasta_file:
+                    messages = pool.map(self.worker_fasta_file, items)
+            for type,mesg in messages:
+                report[type].append(mesg)
+        except KeyError as e:
+            pool.close()
+            shutil.rmtree(args.tmpdir)
+            sys.exit(f"{RED}{e.args[0]}")
+
 
 
     def worker_selection(self, item):
@@ -135,7 +147,7 @@ class SpecificKmers:
             'contig_pos': 0,                  # position of retained contig
         }
         '''
-        level = 'transcript' if item['type'] == 'transcript' else 'gene'
+        level = item['type']
         specific_kmers = []             # specific kmers list
         specific_contigs = []            # specific contigs list
         contig = ""                     # initialize contig sequence
@@ -170,7 +182,18 @@ class SpecificKmers:
         for mer, abund_in_tr in kmercounts_transcriptome_dict.items():
 
             kmer_pos = i
-            abund_in_ge = int(kmercounts_genome_dict[mer])    # abundance in genome for this kmer
+            try:
+                abund_in_ge = int(kmercounts_genome_dict[mer])    # abundance in genome for this kmer
+            except KeyError:
+                if len(mer) != len(next(iter(kmercounts_genome_dict))):
+                    raise KeyError(f"ErrorIndexLength: length of kmer expected: {self.args['kmer_length']}\n"
+                                   f"  Genome kmer index length: {len(next(iter(kmercounts_genome_dict)))}\n"
+                                   f"  Transcriptome kmer index length (dataset): {len(mer)}")
+                revcomp = self.__revcomp(mer)
+                if revcomp in kmercounts_genome_dict:
+                    raise KeyError("ErrorGenomeIndex: The jellyfish indexes of the genome and "
+                                   "transcriptome do not match.\nA possible error is that the "
+                                   "genome index was built with the jellyfish '-C' option.")
 
             if level == 'gene':
                 ### if the kmer is present/unique or does not exist (splicing?) on the genome
@@ -221,6 +244,7 @@ class SpecificKmers:
                         if knb == 1:                                    # first kmer in contig
                             contig = mer
                             kmer_pos_prev = kmer_pos
+                            contig_pos = kmer_pos
                         elif knb>1 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
                             contig += mer[-1]
                             kmer_pos_prev = kmer_pos
@@ -229,6 +253,7 @@ class SpecificKmers:
                             c_nb += 1
                             contig = mer
                             kmer_pos_prev = kmer_pos
+                            contig_pos = kmer_pos
 
             ### Cases of transcripts 1) unannotated, 2) annotated.
             elif level == 'transcript':
@@ -259,6 +284,7 @@ class SpecificKmers:
                     specific_kmers.append(f">{f_id}.kmer{kmer_pos}\n{mer}")
                     ### contigs case
                     if knb == 1:                                    # first kmer in contig
+                        contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
                     elif knb>1 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
@@ -275,11 +301,12 @@ class SpecificKmers:
             elif level == 'chimera':
                 if abund_in_tr == abund_in_ge == 0:
                     ### kmers case
-                    i += 1
+                    knb += 1
                     specific_kmers.append(f">{f_id}.kmer{kmer_pos}\n{mer}")
                     ### contig case
                     if knb == 1:
                         contig = mer
+                        kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
                     elif knb>1 and kmer_pos == kmer_pos_prev+1:
                         contig += mer[-1]
@@ -292,7 +319,7 @@ class SpecificKmers:
                         contig_pos = kmer_pos
             ### not a gene, transcript, or chimera
             else:
-                sys.exit(f"{RED}Error: level {level} unknown.{ENDCOL}")
+                raise KeyError(f"{RED}Error: level {level} unknown.{ENDCOL}")
 
             i += 1
 
@@ -338,6 +365,11 @@ class SpecificKmers:
         os.makedirs(outdir, exist_ok=True)
         with open(os.path.join(outdir, outfile), 'w') as fh:
             fh.write("\n".join(specific_seq) + '\n')
+
+
+    def __revcomp(self, mer):
+        revcomp = lambda mer: ''.join([{'A':'T', 'C':'G', 'G':'C', 'T':'A'}[B] for B in mer][::-1])
+        return revcomp(mer)
 
 
 '''
