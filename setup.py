@@ -15,11 +15,13 @@ setuptools.setup(
     packages = setuptools.find_packages(),
     classifiers = [
         'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Natural Language :: English',
-        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
     entry_points = {
         'console_scripts': [

@@ -86,7 +86,6 @@ class SpecificKmers:
     def worker_fasta_file(self, item):
         ### unpack item
         globals().update(item)
-        # ~ print(f"{f_id}: start worker")
         ### 1. write separate file for each item
         seq_file = self.dump_seq(item['f_id'], item['seq'])
 
@@ -115,18 +114,22 @@ class SpecificKmers:
 
     def jellyfish(self, seq_file, jf_file):
         """
-        From sequence, compute jellyfish againt the genome/transcriptome and convert results as dict ()
+        From sequence, compute jellyfish againt the genome/transcriptome and convert results
+        as dict ()
         """
-        if self.args['debug']: print(f"{YELLOW}start jellyfish on {os.path.basename(seq_file)} against {os.path.basename(jf_file)}{ENDCOL}")
+        if self.args['debug']: print(f"{YELLOW}start jellyfish on {os.path.basename(seq_file)} "
+                                     f"against {os.path.basename(jf_file)}{ENDCOL}")
         cmd = f"jellyfish query -s '{seq_file}' {jf_file}"
         try:
-            # ~ result = subprocess.run(cmd, shell=True, check=True, capture_output=True).stdout.decode().rstrip().split('\n')
-            result = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT).rstrip('\n').split('\n')
+            result = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT) \
+                                             .rstrip('\n').split('\n')
         except subprocess.CalledProcessError as err:
             sys.exit(f"{ERROR}Error: executing jellyfish:\n"
                      f"  {ERROR}command: {ENDCOL}{cmd}\n"
                      f"  {ERROR}returned: {ENDCOL}{err.output}")
-        result_dict = dict([ (b[0], int(b[1])) for b in [a.split() for a in result]])
+        if not result[0]:
+            return {}
+        result_dict = dict([(b[0], int(b[1])) for b in [a.split() for a in result]])
         return result_dict
 
 
@@ -138,23 +141,23 @@ class SpecificKmers:
         ### Define some variables: gene_name, transcript_name, variants_dic and output file names
         '''
         d = {
-            'specific_kmers': [],             # specific kmers list
+            'specific_kmers': [],              # specific kmers list
             'specific_contigs': [],            # specific contigs list
-            'contig': "",                     # initialize contig sequence
-            'knb': 0,                         # kmer number (selected kmer)
+            'contig': "",                      # initialize contig sequence
+            'knb': 0,                          # kmer number (selected kmer)
             'c_nb': 1,                         # contig number
-            'kmer_pos_prev': 0,               # position of retained kmer
-            'contig_pos': 0,                  # position of retained contig
+            'kmer_pos_prev': 0,                # position of retained kmer
+            'contig_pos': 0,                   # position of retained contig
         }
         '''
-        level = item['type']
-        specific_kmers = []             # specific kmers list
+        level = 'gene' if item['type'] not in ['transcript', 'chimera'] else item['type']
+        specific_kmers = []              # specific kmers list
         specific_contigs = []            # specific contigs list
-        contig = ""                     # initialize contig sequence
-        knb = 0                         # kmer number (selected kmer)
+        contig = ""                      # initialize contig sequence
+        knb = 0                          # kmer number (selected kmer)
         c_nb = 1                         # contig number
-        kmer_pos_prev = 0               # position of retained kmer
-        contig_pos = 0                  # position of retained contig
+        kmer_pos_prev = 0                # position of retained kmer
+        contig_pos = 0                   # position of retained contig
 
         ### initialization of count variables
         total_kmers = len(kmercounts_transcriptome_dict)
@@ -319,7 +322,7 @@ class SpecificKmers:
                         contig_pos = kmer_pos
             ### not a gene, transcript, or chimera
             else:
-                raise KeyError(f"{RED}Error: level {level} unknown.{ENDCOL}")
+                raise KeyError(f"{RED}Error: level {level!r} unknown.{ENDCOL}")
 
             i += 1
 
@@ -354,7 +357,7 @@ class SpecificKmers:
         if args['selection']:
             mesg = f"{given}: {item['symbol']}:{ENST} - kmers/contigs: {len(specific_kmers)}/{len(specific_contigs)} (level: {level})"
         else:
-            mesg = f"{f_id} (level: {level})"
+            mesg = f"{f_id} - kmers/contigs: {len(specific_kmers)}/{len(specific_contigs)} (level: {level})"
 
         return 'done', mesg
 
