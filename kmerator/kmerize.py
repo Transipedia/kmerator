@@ -187,7 +187,7 @@ class SpecificKmers:
             kmer_pos = i
             try:
                 abund_in_ge = int(kmercounts_genome_dict[mer])    # abundance in genome for this kmer
-            except KeyError:
+            except KeyError as err:
                 if len(mer) != len(next(iter(kmercounts_genome_dict))):
                     raise KeyError(f"ErrorIndexLength: length of kmer expected: {self.args['kmer_length']}\n"
                                    f"  Genome kmer index length: {len(next(iter(kmercounts_genome_dict)))}\n"
@@ -197,6 +197,7 @@ class SpecificKmers:
                     raise KeyError("ErrorGenomeIndex: The jellyfish indexes of the genome and "
                                    "transcriptome do not match.\nA possible error is that the "
                                    "genome index was built with the jellyfish '-C' option.")
+                raise KeyError(f"Error: kmer not found in genome: {err}")
 
             if level == 'gene':
                 ### if the kmer is present/unique or does not exist (splicing?) on the genome

@@ -215,6 +215,7 @@ def checkup_args(args):
     ### --fasta-file - check if query fasta file is present
     if args.fasta_file and not os.path.isfile(args.fasta_file):
         sys.exit(f"{ERROR}Error: {args.fasta_file!r} not found.{ENDCOL}")
+    check_fasta_file(args)
     ### --fasta-file - Check query fasta file extension
     if args.fasta_file and args.fasta_file.split('.')[-1] not in ("fa", "fasta"):
         sys.exit(f" {ERROR}Error: {os.path.basename(args.fasta_file)} " \
@@ -248,6 +249,21 @@ def checkup_args(args):
             args.tmpdir = tempfile.mkdtemp(prefix="kmerator_", dir=args.tmpdir)
     else:
         args.tmpdir = args.output
+
+
+def check_fasta_file(args):
+    headers = set()
+    with open(args.fasta_file) as fh:
+        nb = 1
+        for row in fh:
+            if row.startswith('>'):
+                header = row.split(' ')[0]
+                if header in headers:
+                    sys.exit(f"{ERROR}ErrorFastaFile: sequence identifier must be unique.\n"
+                                    f"    {header.rstrip()!r} is not unique (line {nb}).")
+                headers.add(header)
+            nb += 1
+    del headers
 
 
 '''
