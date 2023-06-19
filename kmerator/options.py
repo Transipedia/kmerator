@@ -215,11 +215,12 @@ def checkup_args(args):
     ### --fasta-file - check if query fasta file is present
     if args.fasta_file and not os.path.isfile(args.fasta_file):
         sys.exit(f"{ERROR}Error: {args.fasta_file!r} not found.{ENDCOL}")
-    check_fasta_file(args)
     ### --fasta-file - Check query fasta file extension
     if args.fasta_file and args.fasta_file.split('.')[-1] not in ("fa", "fasta"):
         sys.exit(f" {ERROR}Error: {os.path.basename(args.fasta_file)} " \
                 f"Does not appears to be a fasta file.{ENDCOL}")
+    if args.fasta_file:
+        check_fasta_file(args)
     ### --selection - Check Gene Select option
     if args.selection:
         for gene in args.selection:
