@@ -281,6 +281,7 @@ class Dataset:
         attended  = ['transcriptome.pkl', 'transcriptome.jf', 'geneinfo.pkl', 'report.md']
         releases = {}
         files = next(os.walk(self.args.datadir))[2]
+        not_a_dataset_file = []
 
         ### dict of releases : {<specie>: {<release>:[<file1>, <file2>]} }
         for file in files:
@@ -291,7 +292,7 @@ class Dataset:
                 item = f"{file[3]}.{file[4]}"
                 releases.setdefault(specie, {}).setdefault(release, []).append(item)
             except IndexError:
-                print(f"{DEBUG} Comment: {'.'.join(file)!r} is not a Dataset file.{ENDCOL}")
+                not_a_dataset_file.append(file)
 
         ### classify the releases (complete or incomplete)
         releases_ok = {}
@@ -303,19 +304,23 @@ class Dataset:
                 else:
                     releases_ko.setdefault(specie, []).append(release)
 
-        if releases_ko:
-            print(f"\n{YELLOW} Incompletes datasets:")
-            for specie, releases in releases_ko.items():
-                print(f"{YELLOW}   {specie}: {', '.join(releases)}.{ENDCOL}")
-
         ### Show releases
-        print(f"\n Location of datasets: {self.args.datadir}")
+        print(f"\n {YELLOW}Location of datasets:{ENDCOL} {self.args.datadir}")
         if releases_ok:
-            print("\n Datasets found:", *[f"{k}: {', '.join([str(a) for a in sorted([int(i) for i in v])])}" for k,v in releases_ok.items()], sep="\n  - ")
+            print(f"\n {YELLOW}Datasets found:{ENDCOL}", *[f"{k}: {', '.join([str(a) for a in sorted([int(i) for i in v])])}" for k,v in releases_ok.items()], sep="\n  - ")
             if releases_ko:
-                print("\n Incompletes datasets:", *[f"{k}: {', '.join([str(a) for a in sorted([int(i) for i in v])])}" for k,v in releases_ko.items()], sep="\n  - ")
+                print(f"\n {YELLOW}Incompletes datasets:{ENDCOL}")
+                for specie, releases in releases_ko.items():
+                    print(f"  - {specie}: {', '.join(releases)}{ENDCOL}")
+
         else:
-            print(f"\n No releases found")
+            print(f"\n {YELLOW}No releases found{ENDCOL}")
+        print()
+
+        ### Other file found in dataset location
+        if not_a_dataset_file:
+            print(f" {YELLOW}Files not part of a dataset:{ENDCOL}")
+            print(*[f"  - {i[0]}.{i[1]}" for i in not_a_dataset_file], sep="\n")
         print()
 
         ### exit

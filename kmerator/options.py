@@ -163,6 +163,16 @@ def usage(conf):
                         action="store_true",
                         help="builds a new dataset if a new version is found on Ensembl",
                        )
+    exclusive.add_argument('--info',
+                        nargs="+",
+                        metavar="gene",
+                        help=("get some information about gene. Multiple entries are allowed or "
+                              "a text file with list of genes"),
+                        )
+    parser.add_argument('-a', '--all',
+                        action='store_true',
+                        help=("only with '--info' option. Give more info, like transcript sequences"),
+                        )
     parser.add_argument('-v', '--version',
                         action='version',
                         version=f'{parser.prog} v{info.VERSION}',
@@ -234,6 +244,15 @@ def checkup_args(args):
                 args.selection = []
                 for line in fh:
                     args.selection += line.split('#')[0].split()
+
+    ### args.info: define genes/transcripts provided when they are in a file
+    if args.info and len(args.info) == 1 and os.path.isfile(args.info[0]):
+            with open(args.info[0]) as fh:
+                args.info = []
+                for line in fh:
+                    args.info += line.split('#')[0].split()
+
+
     ### --genome - check jellifish genome
     # ~ if not args.genome[-3:] == '.jf':
         # ~ sys.exit(f"{ERROR}Error: file not a jellyfish index ({args.genome!r}).{ENDCOL}")

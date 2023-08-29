@@ -28,6 +28,7 @@ import info
 from config import Config
 from dataset import Dataset
 from kmerize import SpecificKmers
+import geneinfo
 from options import usage
 from color import *
 import exit
@@ -54,16 +55,17 @@ def main():
     if args.mk_dataset: dataset.make()
     if args.last_avail: dataset.last_available()
     if args.update_dataset: dataset.update_last()
+    if args.info: geneinfo.info(args)
 
 
     ### load kmerator geneinfo file as dict
     print(f" 🧬 Load dataset {args.release!r}.")
 
     ### Important objects
-    items = []                      # {given: xxx, ENST: xxx, ENSG: xxx, symbol: xxx, type: xxx}
-                                    # {f_id: xxx, seq: xxx}
+    items = []  # {given: xxx, ENST: xxx, ENSG: xxx, symbol: xxx, type: xxx, f_id: xxx, seq: xxx}
+
     report = {'failed': [], 'done': [], 'multiple': [], 'warning': []}
-    transcriptome_dict = None        # not used with --fasta-file option
+    transcriptome_dict = None       # not used with --fasta-file option
     geneinfo_dict = None            # not used with '--fasta-file' option
 
     ### load transcriptome if --selection option is set
@@ -74,7 +76,7 @@ def main():
     ### load geneinfo
     geneinfo_dict = dataset.load_geneinfo()
     ### Find transcripts according the selection
-    find_items(args, items, report, geneinfo_dict)
+    items = find_items(args, report, geneinfo_dict)
 
     ### get specific kmers (using multithreading)
     print(f" 🧬 Extract specific kmers, please wait..")
@@ -94,10 +96,11 @@ def main():
     exit.gracefully(args)
 
 
-def find_items(args, items, report, geneinfo_dict=None):
+def find_items(args, report, geneinfo_dict=None):
     """
     for each name given (symbol/alias/ENSG/ENST), get information from geneinfo_dict
     """
+    items = []
     ### With '--selection' option
     if args.selection:
         for given in args.selection:
@@ -171,7 +174,7 @@ def find_items(args, items, report, geneinfo_dict=None):
             else:
                 report['failed'].append(f"{f_id}: sequence to short ({len(seq)} < {args.kmer_length})")
 
-
+    return items
 
 def longest_transcript(args, ENSG):
     print(args)

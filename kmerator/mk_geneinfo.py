@@ -23,6 +23,10 @@ class GeneInfoBuilder:
             gene-symbol: HSF1
             canonical: ENST00000528838
             nb_transcript: 14
+            chr: 11
+            start: 144291591
+            end: 144314720
+            strand: 1
             aliases:
                 - HSTF1
             enst:
@@ -99,6 +103,9 @@ class GeneInfoBuilder:
           key: line[0] = gene_id
           tupple:
             - $3  = seq_region_id
+            - $4  = start
+            - $5  = end
+            - $6  = strand
             - $7  = xref_id
             - $11 = canonical_transcript_id
             - $12 = stable_id (ENSG)
@@ -136,18 +143,17 @@ class GeneInfoBuilder:
         seq_region_url = f"{self.url}seq_region.txt.gz"
         seq_region_r = requests.get(seq_region_url)
         seq_region_str = gzip.decompress(seq_region_r.content).decode()
-        chr = []
+        chr = {}
         for line in seq_region_str.splitlines():
             line = line.split()
             if line[0] in seq_region_ids:
-                chr.append(line[1])
+                chr[line[0]] = line[1]
         del seq_region_r, seq_region_str
 
         ### get meta file and keep assembly.default
         meta_url = f"{self.url}meta.txt.gz"
         meta_r = requests.get(meta_url)
         meta_str = gzip.decompress(meta_r.content).decode()
-        chr = []
         for line in meta_str.splitlines():
             line = line.split()
             if line[2] == "assembly.default":
@@ -169,7 +175,13 @@ class GeneInfoBuilder:
             line = line.split('\t')
             if line[3] in seq_region_ids:   # item must be in a regular chromosom
                 gene_id[line[0]] = (line[3], line[7], line[11], line[12])
-                gene_name[line[12]] = {}
+                gene_name[line[12]] = {'chr': chr[line[3]],
+                                       'start': int(line[4]),
+                                       'end': int(line[5]),
+                                       'strand': int(line[6]),
+                                       'biotype': line[1],
+                                       'desc': line[9],
+                                       }
                 xrefs.setdefault(line[7], []).append(line[0])
 
         del gene_r, gene_str
