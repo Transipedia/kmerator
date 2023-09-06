@@ -255,6 +255,8 @@ def checkup_args(args):
 
 
     ### --genome - check jellifish genome
+    if not os.path.isfile(args.genome):
+        sys.exit(f"{ERROR}Error: file not found: {args.genome!r}.{ENDCOL}")
     cmd = f"jellyfish info {args.genome}"
     stdin = subprocess.check_output(cmd, shell=True).decode().rstrip().split('\n')
     stdin = { i[0]:i[1].strip() for i in [raw.split(':') for raw in stdin]}
