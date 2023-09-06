@@ -48,8 +48,7 @@ class SpecificKmers:
         except KeyError as e:
             pool.close()
             shutil.rmtree(args.tmpdir)
-            sys.exit(f"{RED}{e.args[0]}")
-
+            sys.exit(f"{RED}Error: {e.args[0]}")
 
 
     def worker_selection(self, item):
@@ -186,17 +185,13 @@ class SpecificKmers:
 
             kmer_pos = i
             try:
-                abund_in_ge = int(kmercounts_genome_dict[mer])    # abundance in genome for this kmer
+                canonical = self.__canonical(mer)
+                abund_in_ge = int(kmercounts_genome_dict[canonical])    # abundance in genome for this kmer
             except KeyError as err:
                 if len(mer) != len(next(iter(kmercounts_genome_dict))):
                     raise KeyError(f"ErrorIndexLength: length of kmer expected: {self.args['kmer_length']}\n"
                                    f"  Genome kmer index length: {len(next(iter(kmercounts_genome_dict)))}\n"
                                    f"  Transcriptome kmer index length (dataset): {len(mer)}")
-                revcomp = self.__revcomp(mer)
-                if revcomp in kmercounts_genome_dict:
-                    raise KeyError("ErrorGenomeIndex: The jellyfish indexes of the genome and "
-                                   "transcriptome do not match.\nA possible error is that the "
-                                   "genome index was built with the jellyfish '-C' option.")
                 raise KeyError(f"Error: kmer not found in genome: {err}")
 
             if level == 'gene':
@@ -371,9 +366,9 @@ class SpecificKmers:
             fh.write("\n".join(specific_seq) + '\n')
 
 
-    def __revcomp(self, mer):
-        revcomp = lambda mer: ''.join([{'A':'T', 'C':'G', 'G':'C', 'T':'A'}[B] for B in mer][::-1])
-        return revcomp(mer)
+    def __canonical(self, mer):
+        revcomp = mer[::-1].translate(str.maketrans('ATCG','TAGC'))
+        return sorted((mer, revcomp))[0]
 
 
 '''

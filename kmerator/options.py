@@ -1,4 +1,4 @@
-# usage.py
+# options.py
 
 '''
 TODO
@@ -14,6 +14,7 @@ import sys
 import argparse
 import info
 import tempfile
+import subprocess
 
 from color import *
 
@@ -254,8 +255,17 @@ def checkup_args(args):
 
 
     ### --genome - check jellifish genome
-    # ~ if not args.genome[-3:] == '.jf':
-        # ~ sys.exit(f"{ERROR}Error: file not a jellyfish index ({args.genome!r}).{ENDCOL}")
+    cmd = f"jellyfish info {args.genome}"
+    stdin = subprocess.check_output(cmd, shell=True).decode().rstrip().split('\n')
+    stdin = { i[0]:i[1].strip() for i in [raw.split(':') for raw in stdin]}
+    if not stdin['command']:            # not a jellyfish index
+        sys.exit(f"{ERROR}Error: {args.genome!r} does not appear to be a jellyfish index.\n")
+    if stdin['canonical'] == 'no':     # jellyfish index built without --canonical option
+        sys.exit(f"{ERROR}Error: the genome jellyfish index must be built with --canonical option.\n"
+                 f"{ENDCOL}From kmerator v0.9.0, it must be built with the '--canonical' option.\n"
+                 "Example to built a jellyfish index:\n"
+                 f"{YELLOW}jellyfish count /genomes/GRCh38.fa -m 31 -s 100M -t 8 --canonical "
+                 "-o GRCh38.jf")
     ### --chimera level works only with --fasta-file option
     if args.chimera and not args.fasta_file:
         sys.exit(f"{ERROR}Error: '--chimera' needs '--fasta-file' option.{ENDCOL}")

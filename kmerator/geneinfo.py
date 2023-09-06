@@ -11,6 +11,8 @@ import sys
 import os
 import pickle
 
+### Local modules
+from dataset import Dataset
 import color as col
 import exit
 
@@ -19,55 +21,15 @@ def info(args):
     """ Function doc """
 
     ### load geneinfo pickle file as dict
-    geneinfo_dict = load_geneinfo(args)
-    ### if --all is set, load transcriptome
-    transcriptome_dict = None
-    if args.all:
-        tr_file = os.path.join(args.datadir, f"{args.specie}.{geneinfo_dict['assembly']}.{args.release}.transcriptome.pkl")
-        with open(tr_file, 'rb') as fic:
-            transcriptome_dict = pickle.load(fic)
+    dataset = Dataset(args)
+    geneinfo_dict = dataset.load_geneinfo()
+    transcriptome_dict = dataset.load_transcriptome() if args.all else None
     ### get info for each item
     info, not_found = get_info(args, geneinfo_dict)
     ### print info
     output(args, geneinfo_dict, info, not_found, transcriptome_dict)
     ### quit removing temporary files
     exit.gracefully(args)
-
-
-def load_geneinfo(args):
-    """
-    Define geneinfo pickle file and load it as a dict
-    """
-
-    ### define geneinfo pickle file
-    datadir_files = list(os.walk(args.datadir))[0][2]
-    nb = 0
-    for file in datadir_files:
-        if file.startswith(args.specie) and file.endswith(f".{args.release}.geneinfo.pkl"):
-            geneinfo = file
-            nb += 1
-    if nb > 2:
-        print(f"{col.ERROR}geneinfoFileError: multiple geneinfo file found matching\n"
-              f"  specie: {args.specie}\n"
-              f"  release: {args.release}\n"
-              "end of file: 'geneinfo.pkl'"
-             )
-        exit.gracefully(args)
-    if nb == 0:
-        print(f"{col.DEBUG}DatasetError: no dataset found{col.ENDCOL}\n"
-              f"  specie: {args.specie}\n"
-              f"  release: {args.release}\n"
-               "To install, enter:\n"
-              f"{col.DEBUG}kmerator --mk-dataset -S {args.specie} -r {args.release}\n{col.ENDCOL}"
-               "To show available datasets, enter:\n"
-              f"{col.DEBUG}kmerator --list-dataset"
-             )
-        exit.gracefully(args)
-
-    ### load geneinfo pickle file as a dict
-    with open(os.path.join(args.datadir, geneinfo), "rb") as fic:
-        return pickle.load(fic)
-
 
 
 def get_info(args, geneinfo_dict):
@@ -133,12 +95,12 @@ def output(args, geneinfo_dict, info, not_found, transcriptome_dict):
         number_found = "" if ENSGs['_type'] == "ensembl gene name" else f"({len(ENSGs)-1} found) "
 
         print(f"\n=== {given} ({ENSGs['_type']}) {number_found} ===")
-        del ENSGs['_type']
+        given_type = ENSGs.pop('_type')     # gene symbol, alias, ENSG, transcript
 
         for ensg, val in ENSGs.items():
             blank = "\n" + 23 * " "
             print(f"Ensembl ID             {ensg}")
-            print(f"  Display Name         {val.get('symbol', '')}")
+            print(f"  Gene Name            {val.get('symbol', '')}")
             if args.all: print( "  Aliases              {}".format(blank.join(val.get('aliases', ''))))
             print(f"  Specie               {args.specie}")
             print(f"  Assembly             {geneinfo_dict['assembly']}")
@@ -149,15 +111,21 @@ def output(args, geneinfo_dict, info, not_found, transcriptome_dict):
             print(_text_format(23, '  Description', val.get('desc', 'unknown')))
             ### Print transcrpts (or not)
             if args.all:
-                print(f"  Transcript of {val.get('symbol', ensg)}")
-                transcripts = val['transcript']
-                transcripts.remove(val['canonical'])    # I want canonical at first
-                transcripts.insert(0, val['canonical']) # I want canonical at first
-                # ~ print( "  transcripts          {}".format(blank.join(val["transcript"])))
-                for transcript in transcripts:
-                    print(_text_format(23, f"{transcript} ({len(transcriptome_dict[transcript])})", transcriptome_dict[transcript], pos_key='top'))
+                if given_type == "transcript":
+                    transcript = next(iter(info))
+                    seq = transcriptome_dict.get(transcript, f"{col.RED}✘✘✘{col.ENDCOL} (sequence not found)")
+                    length = f" ({len(seq)})" if seq[0] in ['A', 'T', 'C', 'G'] else ""
+                    print(_text_format(23, f"{transcript}{length}", seq, pos_key='top'))
+                else:
+                    print(f"  Transcripts of {val.get('symbol', ensg)}")
+                    transcripts = val['transcript']
+                    transcripts.remove(val['canonical'])    # I want canonical at first
+                    transcripts.insert(0, val['canonical']) # I want canonical at first
+                    for transcript in transcripts:
+                        seq = transcriptome_dict.get(transcript, f"{col.RED}✘✘✘{col.ENDCOL} (sequence not found)")
+                        length = f" ({len(seq)})" if seq[0] in ['A', 'T', 'C', 'G'] else ""
+                        print(_text_format(23, f"{transcript}{length}", seq, pos_key='top'))
             print()
-
 
     ### output not found items
     if not_found:

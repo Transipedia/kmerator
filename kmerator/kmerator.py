@@ -143,7 +143,7 @@ def find_items(args, report, geneinfo_dict=None):
                 ENSG = geneinfo_dict['transcript'][item]
                 items.append({'given':  given, 'ENST': item, 'type': 'transcript',
                                     'ENSG':   ENSG,
-                                    'symbol': geneinfo_dict['gene'][ENSG]['symbol'],
+                                    'symbol': geneinfo_dict['gene'][ENSG].get('symbol', 'N/A'),
                                     })
             else:
                 report['failed'].append(f"{given}: not found in transcriptome")

@@ -26,6 +26,7 @@ import gzip
 import pickle
 import threading
 
+import info
 from color import *
 from mk_geneinfo import GeneInfoBuilder
 from mk_transcriptome import TranscriptomeBuilder
@@ -57,7 +58,8 @@ def main():
     elif args.last_avail:
         dataset.last_available()
     elif args.load:
-        geneinfo_dict, transcriptome_dict = dataset.load()
+        geneinfo_dict = dataset.load_geneinfo()
+        transcriptome_dict = dataset.load_transcriptome()
         for type in ('gene', 'symbol', 'alias', 'transcript'):
             print(type, next(iter(geneinfo_dict[type].items())))
         print(next(iter(transcriptome_dict.items())))
@@ -145,30 +147,24 @@ class Dataset:
     def get_local_releases(self):
         return {int(i.split('.')[2]) for i in next(os.walk(self.args.datadir))[2] if i.split('.')[0] == self.args.specie}
 
-    '''
-    def load(self):
-        """ Load dataset as dict (geneinfo and transcriptome)"""
-        ### if dataset not found, ask to install
-        if not self.dataset_ok:
-            self.build()
-        ### Load geneinfo and transcriptome
-        with open(self.geneinfo_pkl, 'rb') as fic:
-            geneinfo_dict = pickle.load(fic)
-            self.args.assembly = geneinfo_dict['assembly']
-        with open(self.transcriptome_pkl, 'rb') as fic:
-            transcriptome_dict = pickle.load(fic)
-        return geneinfo_dict, transcriptome_dict
-    '''
 
     def load_geneinfo(self):
         """ Load geneinfo.pkl as dict"""
         ### if dataset not found, ask to install
         if not self.dataset_ok:
             self.build()
+            self.dataset_ok = self.dataset_here()
         ### Load geneinfo
         with open(self.geneinfo_pkl, 'rb') as fic:
             geneinfo_dict = pickle.load(fic)
             self.args.assembly = geneinfo_dict['assembly']
+        ### check version of dataset
+        version_geneinfo = geneinfo_dict.get('version', 0)
+        if version_geneinfo < info.VERSION_DATASET:
+            print(f"{RED}\n ErrorVersion: application and dataset versions are not compatible.\n"
+                   "               Please, reinstall the dataset:\n"
+                  f"{YELLOW} {info.APPNAME} --mk-dataset -S {self.args.specie} -r {self.args.release}\n")
+            exit.gracefully(self.args)
         return geneinfo_dict
 
 
@@ -177,6 +173,7 @@ class Dataset:
         ### if dataset not found, ask to install
         if not self.dataset_ok:
             self.build()
+            self.dataset_ok = self.dataset_here()
         ### Load transcriptome
         with open(self.transcriptome_pkl, 'rb') as fic:
             transcriptome_dict = pickle.load(fic)
@@ -262,9 +259,17 @@ class Dataset:
             self.define_dataset()
 
         ### build kmerator dataset for the specie/release specified (multithreaded)
-        print(f" 🧬 Build kmerator dataset for {self.args.specie}, release {self.args.release}, please wait...")
-        th1 = threading.Thread(target=TranscriptomeBuilder, args=(self.args, self.base_url, self.transcriptome_jf, self.report))
-        th2 = threading.Thread(target=GeneInfoBuilder, args=(self.args, self.base_url, self.geneinfo_pkl, self.report))
+        geneinfo = GeneInfoBuilder(self.args, self.base_url, self.geneinfo_pkl, self.report)
+        geneinfo.get_meta()         # first step : get meta info
+        chr = geneinfo.data['chr']
+
+        # ~ geneinfo_dict = geneinfo.build()
+        # ~ TranscriptomeBuilder(self.args, self.base_url, self.transcriptome_jf, self.report, chr)
+
+        ### build kmerator dataset for the specie/release specified (multithreaded)
+        th1 = threading.Thread(target=TranscriptomeBuilder,
+                               args=(self.args, self.base_url, self.transcriptome_jf, self.report, chr))
+        th2 = threading.Thread(target=geneinfo.build)
         th1.start()
         th2.start()
         th1.join()
@@ -366,7 +371,7 @@ class Dataset:
         if resp.lower() == 'y':
             # ~ self.args.release = str(release)           # because build() using self.args.release
             self.args.yes = True
-            print(f"Install {self.args.specie}, releaase {self.args.release}, please wait...")
+            print(f" 🧬 Build kmerator dataset for {self.args.specie}, release {self.args.release}, please wait...")
             self.build()
 
         exit.gracefully(self.args)

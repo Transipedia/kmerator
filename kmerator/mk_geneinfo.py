@@ -4,7 +4,9 @@ from bs4 import BeautifulSoup
 import gzip
 import pickle
 
+import info
 from color import *
+
 
 class GeneInfoBuilder:
     """
@@ -58,6 +60,8 @@ class GeneInfoBuilder:
         self.args = args
         self.outfile = outfile
         self.report = report
+        ### internal variables
+        self.chr_dict = {}                      # ID:name for chromosomes
         ### get base url of files to download
         url = f"{url}/release-{args.release}/mysql/"
         r = requests.get(url)
@@ -66,56 +70,28 @@ class GeneInfoBuilder:
         self.url = url + dir
         ### dicts (refs: content downloaded, data: dict of results)
         self.refs = {"gene": {}, "xref": {}, "synonym": {}, "transcript": {}}
-        self.data = {"gene": {}, "symbol": {}, "alias": {}, "transcript": {}, "assembly": ""}
-        ### Get ENSG
-        self.set_refs()
-        ### Add SYMBOLS
-        self.add_symbols()
-        ### Add ALIASES
-        self.add_aliases()
-        ### Add TRANSCRIPTS
-        self.add_transcripts()
-        ### Write as file
-        self.write()
-        ### Add to report
-        self.to_report()
-
-        if self.args.debug:
-            print(DEBUG)
-            print("url:", self.url)
-            print("Gene Info")
-            print(f" nb genes: {len(self.data['gene'])}")
-            print(f" nb symbols: {len(self.data['symbol'])}")
-            print(f" nb aliases: {len(self.data['alias'])}")
-            print(f" nb transcripts: {len(self.data['transcript'])}")
-            print(ENDCOL)
+        self.data = {"gene": {}, "symbol": {}, "alias": {}, "transcript": {}, "assembly": "",
+                     "chr": [], "version": info.VERSION_DATASET}
 
 
-    def set_refs(self):
-        if __name__ == "__main__": print("Get gene.txt, please wait...")
+    def get_meta(self):
         '''
-        step 1 - REGIONS - get seq_region.txt to make a list of region_id (chromosomes + MT)
-        AIMS - filter alternates chromosomes (CHR_)
+        2. get seq_region.txt to make a list of region_id (chromosomes + MT)
+        1. get Assembly version of the specie
+        AIMS - filter alternates chromosomes (scaffold, CHR_)
           - $0 = region_id
           - $1 = chromosome (ex: 16, X)
+        push chromosomes list in geneinfo_dict['chr']
+        push Assembly version in geneinfo_dic['assembly']
 
-        step 2 - GENES - get gene.txt (gene_id, seq_region_id, xref_id, canonical_transcript_id, stable_id)
-          key: line[0] = gene_id
-          tupple:
-            - $3  = seq_region_id
-            - $4  = start
-            - $5  = end
-            - $6  = strand
-            - $7  = xref_id
-            - $11 = canonical_transcript_id
-            - $12 = stable_id (ENSG)
-        '''
-
-        '''
-        STEP 1 - CHROMOSOME LIST
         https://lists.ensembl.org/pipermail/dev_ensembl.org/2013-January/003357.html
         '''
+        if __name__ == "__main__": print("Get meta info, please wait...")
 
+        '''
+        CHROMOSOME LIST & ASSEMBLY
+        https://lists.ensembl.org/pipermail/dev_ensembl.org/2013-January/003357.html
+        '''
         ### get attrib_type file and keep id when second field == "karyotype_rank"
         attrib_type_url = f"{self.url}attrib_type.txt.gz"
         attrib_type_r = requests.get(attrib_type_url)
@@ -129,10 +105,10 @@ class GeneInfoBuilder:
         del attrib_type_r, attrib_type_str
 
         ### get seq_region_attrib file and keep list of id when second field == attrib_type_id
+        seq_region_ids = []
         seq_region_attrib_url = f"{self.url}seq_region_attrib.txt.gz"
         seq_region_attrib_r = requests.get(seq_region_attrib_url)
         seq_region_attrib_str = gzip.decompress(seq_region_attrib_r.content).decode()
-        seq_region_ids = []
         for line in seq_region_attrib_str.splitlines():
             line = line.split()
             if line[1] == attrib_type_id:
@@ -143,12 +119,13 @@ class GeneInfoBuilder:
         seq_region_url = f"{self.url}seq_region.txt.gz"
         seq_region_r = requests.get(seq_region_url)
         seq_region_str = gzip.decompress(seq_region_r.content).decode()
-        chr = {}
         for line in seq_region_str.splitlines():
             line = line.split()
             if line[0] in seq_region_ids:
-                chr[line[0]] = line[1]
+                self.chr_dict[line[0]] = line[1]
         del seq_region_r, seq_region_str
+        ## Add chromosome list in geneinfo
+        self.data['chr'] = list(self.chr_dict.values())
 
         ### get meta file and keep assembly.default
         meta_url = f"{self.url}meta.txt.gz"
@@ -157,13 +134,55 @@ class GeneInfoBuilder:
         for line in meta_str.splitlines():
             line = line.split()
             if line[2] == "assembly.default":
-                self.data["assembly"] = line[3].split('.')[0]
+                assembly = line[3].split('.')[0]
+                self.data["assembly"] = assembly
                 break
         del meta_r, meta_str
 
 
+    def build(self):
+        """ Function doc """
+        ### Get ENSG
+        self._set_refs()
+        ### Add SYMBOLS
+        self._add_symbols()
+        ### Add ALIASES
+        self._add_aliases()
+        ### Add TRANSCRIPTS
+        self._add_transcripts()
+        ### Write as file
+        self._write()
+        ### Add to report
+        self._to_report()
+
+        if self.args.debug:
+            print(DEBUG)
+            print("url:", self.url)
+            print("Gene Info")
+            print(f" nb genes: {len(self.data['gene'])}")
+            print(f" nb symbols: {len(self.data['symbol'])}")
+            print(f" nb aliases: {len(self.data['alias'])}")
+            print(f" nb transcripts: {len(self.data['transcript'])}")
+            print(ENDCOL)
+
+
+    def _set_refs(self):
+        if __name__ == "__main__": print("Get gene.txt, please wait...")
         '''
-        STEP 2 - GENES
+        get gene.txt (gene_id, seq_region_id, xref_id, canonical_transcript_id, stable_id)
+          key: line[0] = gene_id
+          tupple:
+            - $3  = seq_region_id
+            - $4  = start
+            - $5  = end
+            - $6  = strand
+            - $7  = xref_id
+            - $11 = canonical_transcript_id
+            - $12 = stable_id (ENSG)
+        '''
+
+        '''
+        GENES
         '''
         gene_url = f"{self.url}gene.txt.gz"
         gene_r = requests.get(gene_url)
@@ -171,11 +190,16 @@ class GeneInfoBuilder:
         gene_id = {}
         gene_name = {}
         xrefs = {}
+        # ~ print("seq_region_ids:", self.seq_region_ids)
         for line in gene_str.splitlines():
             line = line.split('\t')
-            if line[3] in seq_region_ids:   # item must be in a regular chromosom
+            # ~ print("line:", line)
+            # ~ if line[3] in self.seq_region_ids:   # item must be in a regular chromosom
+            if line[3] in self.chr_dict:   # item must be in a regular chromosom
                 gene_id[line[0]] = (line[3], line[7], line[11], line[12])
-                gene_name[line[12]] = {'chr': chr[line[3]],
+                # ~ print('line3:', line[3])
+                # ~ print(f"self.seq_region_ids is a {type(self.seq_region_ids)}")
+                gene_name[line[12]] = {'chr': self.chr_dict[line[3]],
                                        'start': int(line[4]),
                                        'end': int(line[5]),
                                        'strand': int(line[6]),
@@ -191,7 +215,7 @@ class GeneInfoBuilder:
         self.data["gene"] = gene_name
 
 
-    def add_symbols(self):
+    def _add_symbols(self):
         '''
         XREF - list of symbol-name
         kept  if xref_id is found in refs[xrefs] dict
@@ -215,7 +239,7 @@ class GeneInfoBuilder:
         del xref_r, xref_str
 
 
-    def add_aliases(self):
+    def _add_aliases(self):
         '''
         SYNONYM - list of aliases (from external sources)
         kept if xref_id is found on refs[xref] dict
@@ -241,7 +265,7 @@ class GeneInfoBuilder:
         self.data["alias"] = { k:list(v) for k,v in aliases.items()}
 
 
-    def add_transcripts(self):
+    def _add_transcripts(self):
         '''
         TRANSCRIPT - list of transcripts
         $0 = transcript_id
@@ -266,7 +290,7 @@ class GeneInfoBuilder:
                     self.data["gene"][ensg]["canonical"] = enst                    # add to gene info if canonical
 
 
-    def write(self):
+    def _write(self):
         if "\\N" in self.data["symbol"]:
             del self.data["symbol"]["\\N"]
 
@@ -278,7 +302,7 @@ class GeneInfoBuilder:
         return
 
 
-    def to_report(self):
+    def _to_report(self):
         """ Function doc """
         self.report.append("\n## Gene Info\n")
         self.report.append(f"- nb genes: {len(self.data['gene'])}")

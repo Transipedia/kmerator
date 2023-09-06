@@ -8,6 +8,7 @@ import gzip
 import pickle
 import shutil
 import tempfile
+import threading
 
 from color import *
 
@@ -21,11 +22,13 @@ class TranscriptomeBuilder:
     - delete temporary files
     """
 
-    def __init__(self, args, base_url, transcriptome_jf, report):
+    def __init__(self, args, base_url, transcriptome_jf, report, chr):
         """ Class initialiser """
         self.args = args
         self.base_url = base_url
         self.report = report
+        self.chr = chr
+        self.transcript_count = 0
 
         if self.args.debug: print(f"{DEBUG}Build transcriptome, please wait...{ENDCOL}")
         ### select fasta file to download
@@ -49,11 +52,26 @@ class TranscriptomeBuilder:
         ### create a pickle file of transcriptome
         self.mk_pickle(transcriptome_fa)
 
+        '''
+        ### make index of transcriptome (kmc or jellyfish)
+        th1_1 = threading.Thread(target=self.mk_index,
+                               args=(transcriptome_fa, transcriptome_jf))
+        ### create a pickle file of transcriptome
+        th1_2 = threading.Thread(target=self.mk_pickle,
+                               args=(transcriptome_jf,))
+        th1_1.start()
+        th1_2.start()
+        th1_1.join()
+        th1_2.join()
+        '''
+
+        ### Add to report
+        self._to_report()
+
         ### remove intermediate files
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         if not args.keep:
             os.remove(transcriptome_fa)
-
 
 
     def build_fasta(self, item):
@@ -130,15 +148,18 @@ class TranscriptomeBuilder:
                 if line.rstrip():
                     if line.startswith('>'):
                         current_header = line
-                        if not 'CHR_' in previous_header.split()[2]:
-                            ## add only the transcript name in the header (without version)
+                        # ~ if not 'CHR_' in previous_header.split()[2]:
+                        ### keep only transcripts in regular chromosomes
+                        if previous_header.split()[2].split(':')[2] in self.chr:
+                            ## add only the transcript name in the header (without version number)
                             sequences.append(f"{previous_header.split('.')[0]}\n{''.join(seq)}\n")
                         seq = []
                         previous_header = current_header
                     else:
                         seq.append(line.rstrip())
         ### last fasta sequence is not printed in the loop
-        if not 'CHR_' in previous_header.split()[2]:
+        if previous_header.split()[2].split(':')[2] in self.chr:
+        # ~ if not 'CHR_' in previous_header.split()[2]:
             sequences.append(f"{previous_header.split('.')[0]}\n{''.join(seq)}\n")
         ### write temp file
         fasta_file_basename = ".".join(os.path.basename(fasta_file_path).split('.')[:-2])
@@ -166,7 +187,7 @@ class TranscriptomeBuilder:
                     # ~ outfile.write(infile.read())        # small files
                     for line in infile:                     # big files
                         outfile.write(line)
-        ''' other method
+        ''' Other method
         with open(transcriptome_fa, 'w') as fout, fileinput.input(temp_fasta_files, 'rb') as fin:
             for line in fin:
                 fout.write(line)
@@ -201,7 +222,8 @@ class TranscriptomeBuilder:
         ## jellyfish case
         elif tool == 'jellyfish':
             filename = os.path.basename(f"{os.path.splitext(transcriptome_fa)[0]}.jf")
-            cmd = f"{tool} count -t {self.args.thread} -m {self.args.kmer_length} -s 100000 {transcriptome_fa} -o {transcriptome_jf}"
+            cmd = (f"{tool} count -t {self.args.thread} -m {self.args.kmer_length} -s 100000 "
+                   f"{transcriptome_fa} -o {transcriptome_jf}")
 
         ### Build index
         if self.args.debug: print(f"{DEBUG}Build index with {tool!r}, please wait...{ENDCOL}")
@@ -219,7 +241,17 @@ class TranscriptomeBuilder:
                     header = line[1:].rstrip().split()[0].split('.')[0]
                 else:
                     seq = line.rstrip()
+        ### Don't forget the last record
+        fa_dict[header] = seq
+        ### how many records ?
+        self.transcript_count = len(fa_dict)
+        ### write as pickle file
         transcriptome_pkl = f"{os.path.splitext(transcriptome_fa)[0]}.pkl"
         with open(transcriptome_pkl, 'wb') as fh:
             pickle.dump(fa_dict, fh)
 
+
+    def _to_report(self):
+        """ Function doc """
+        self.report.append("\n## Transcriptome Info\n")
+        self.report.append(f"- nb transcripts: {self.transcript_count}\n")
