@@ -99,7 +99,7 @@ def output(args, geneinfo_dict, info, not_found, transcriptome_dict):
 
         for ensg, val in ENSGs.items():
             blank = "\n" + 23 * " "
-            print(f"Ensembl ID             {ensg}")
+            print(f"  Ensembl ID           {ensg}")
             print(f"  Gene Name            {val.get('symbol', '')}")
             if args.all: print( "  Aliases              {}".format(blank.join(val.get('aliases', ''))))
             print(f"  Specie               {args.specie}")
@@ -125,6 +125,9 @@ def output(args, geneinfo_dict, info, not_found, transcriptome_dict):
                         seq = transcriptome_dict.get(transcript, f"{col.RED}✘✘✘{col.ENDCOL} (sequence not found)")
                         length = f" ({len(seq)})" if seq[0] in ['A', 'T', 'C', 'G'] else ""
                         print(_text_format(23, f"{transcript}{length}", seq, pos_key='top'))
+            else:
+                print("  Transcripts          {}".format(blank.join(val['transcript'])))
+
             print()
 
     ### output not found items
