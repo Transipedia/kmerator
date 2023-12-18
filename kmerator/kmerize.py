@@ -118,7 +118,7 @@ class SpecificKmers:
         """
         if self.args['debug']: print(f"{YELLOW}start jellyfish on {os.path.basename(seq_file)} "
                                      f"against {os.path.basename(jf_file)}{ENDCOL}")
-        cmd = f"jellyfish query -s '{seq_file}' {jf_file}"
+        cmd = f'jellyfish query -s "{seq_file}" {jf_file}'
         try:
             result = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT) \
                                              .rstrip('\n').split('\n')
