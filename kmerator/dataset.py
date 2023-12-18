@@ -417,8 +417,7 @@ class Dataset:
 
 
     def last_available(self):
-        # ~ self.get_ebl_releases()
-        print(max(self.ebl_releases))
+        print(self.get_ebl_current_release())
         exit.gracefully(self.args)
 
 
