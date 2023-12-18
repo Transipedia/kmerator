@@ -11,7 +11,7 @@
 --------
 Ensembl links
   - http://www.ensembl.org/info/docs/api/core/core_schema.html
-  - https://ftp.ensembl.org/pub/release-108/mysql/
+  - https://ftp.ensembl.org/pub/current-mysql/
   - http://www.ensembl.org/info/docs/api/core/diagrams/Core.svg
 Other links:
   - https://lists.ensembl.org/pipermail/dev_ensembl.org/2013-January/003357.html
@@ -90,15 +90,33 @@ class Dataset:
         self.report_md = None           # report path
         self.report = []                # report
         self.ebl_releases = []          # all releases avalaible on Ensembl
-        ### Is args.specie is an alternative name ?
+        ### Is args.specie an alternative name ?
         if self.args.specie.lower() in species:
             self.args.specie =  species[self.args.specie.lower()]
         if self.args.release == 'last' and not self.args.list_dataset:
+            self.args.release = self.get_ebl_current_release()
             self.get_ebl_releases()
-            self.args.release = str(max(self.ebl_releases))
         ### check if dataset is locally present and assign variable for each file
         if args.datadir:
             self.dataset_ok = self.dataset_here()
+
+
+    def get_ebl_current_release(self):
+        """get number of last available release on Ensembl"""
+        url = os.path.join(self.base_url, "current_mysql")
+        try:
+            r = requests.get(url)
+        except requests.exceptions.ConnectionError:
+            print(f"{YELLOW} Error connecting to Ensembl.{ENDCOL}")
+            return None
+        if not r.ok:
+            print(r)
+            return None
+        soup = BeautifulSoup(r.text, 'lxml')
+        core = [ a.text for a in soup.findAll('a') if a.text.startswith(f"{self.args.specie}_core")]
+        ebl_current_release = core[0].split('_')[-2]
+        return ebl_current_release
+
 
 
     def get_ebl_releases(self):
@@ -381,8 +399,7 @@ class Dataset:
         """ Function doc """
         if not self.ebl_releases:
             self.get_ebl_releases()
-        last_ebl_release = max(self.ebl_releases)
-        self.args.release = str(last_ebl_release)
+        self.args.release = self.get_ebl_current_release()
 
         if not self.dataset_here():
             ask = 'y'
@@ -395,7 +412,7 @@ class Dataset:
             else:
                 sys.exit("Aborted by user.")
         else:
-            print(f"The last release for {self.args.specie} is {last_ebl_release}, nothing to do.")
+            print(f"The last release for {self.args.specie} is {self.args.release}, nothing to do.")
         exit.gracefully(self.args)
 
 
