@@ -105,7 +105,7 @@ class SpecificKmers:
         seq_dir = os.path.join(self.args['tmpdir'], 'sequences')
         os.makedirs(seq_dir, exist_ok=True)
         ### write sequence as fasta
-        seq_file = os.path.join(seq_dir, f"{f_id}.fa")
+        seq_file = os.path.join(seq_dir, f"{f_id.replace('/', '--')}.fa")
         with open(seq_file, 'w') as fh:
             fh.write(f">{f_id}\n{seq}\n")
         return seq_file
@@ -362,7 +362,7 @@ class SpecificKmers:
         """ Write results as fasta file"""
         outdir = os.path.join(args['tmpdir'], type)
         os.makedirs(outdir, exist_ok=True)
-        with open(os.path.join(outdir, outfile), 'w') as fh:
+        with open(os.path.join(outdir, outfile.replace('/', '--')), 'w') as fh:
             fh.write("\n".join(specific_seq) + '\n')
 
 
