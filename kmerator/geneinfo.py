@@ -126,7 +126,7 @@ def output(args, geneinfo_dict, info, not_found, transcriptome_dict):
                         length = f" ({len(seq)})" if seq[0] in ['A', 'T', 'C', 'G'] else ""
                         print(_text_format(23, f"{transcript}{length}", seq, pos_key='top'))
             else:
-                print("  Transcripts          {}".format(blank.join(val['transcript'])))
+                print(_text_format(23, f"  Transcripts ({len(val['transcript'])})", ' '.join(val['transcript'])))
 
             print()
 

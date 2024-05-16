@@ -66,7 +66,7 @@ class GeneInfoBuilder:
         url = f"{url}/release-{args.release}/mysql/"
         r = requests.get(url)
         soup = BeautifulSoup(r.text, 'lxml')
-        dir = [a.text for a in soup.findAll('a') if a.text.startswith(f"{args.specie}_core_{args.release}")][0]
+        dir = [a.text for a in soup.findAll('a') if a.text.startswith(f"{args.specie}_core_{args.release}")][-1]
         self.url = url + dir
         ### dicts (refs: content downloaded, data: dict of results)
         self.refs = {"gene": {}, "xref": {}, "synonym": {}, "transcript": {}}

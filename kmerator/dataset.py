@@ -404,10 +404,9 @@ class Dataset:
         if not self.dataset_here():
             ask = 'y'
             if not self.args.yes:
-                ask = input(f"Dataset for {self.args.specie} will be updated to release {last_ebl_release}, continue ? (Yn): ") or 'y'
+                ask = input(f"Dataset for {self.args.specie} will be updated to release {self.args.release}, continue ? (Yn): ") or 'y'
             if ask.lower() == 'y':
                 ### Build Dataset
-                self.args.release = str(last_ebl_release)
                 self.make()
             else:
                 sys.exit("Aborted by user.")

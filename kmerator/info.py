@@ -5,7 +5,7 @@ Genral informations on to the program.
 """
 
 APPNAME = "kmerator"
-VERSION = "0.9.6-beta"
+VERSION = "0.10.0"
 VERSION_DATASET = 1
 SHORTDESC = "Find specific gene or transcript kmers. And more."
 LICENCE = "GPL3"
