@@ -296,18 +296,3 @@ def check_fasta_file(args):
                 headers.add(header)
             nb += 1
     del headers
-
-
-'''
-def is_transcriptome_ensembl_file(first_row):
-    """Checks if the line matches the Ensembl transcriptome file format"""
-    line = first_row.split()
-    try:
-        if (not line[6].startswith('gene_symbol:') or
-            not line[0].startswith('>ENST') or
-            not line[3].startswith('gene:')):
-            return False
-    except:
-        return False
-    return True
-'''

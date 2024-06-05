@@ -104,6 +104,12 @@ class Config:
 
 
     def edit(self):
-        """ Function doc """
-        cmd = 'xdg-open' if os.environ.get('XDG_SESSION_TYPE') == 'x11' else 'editor'
-        subprocess.call([cmd, self.filePath])
+        """ Edit configuration file """
+        ### define editor
+        editor = 'editor'
+        if os.environ.get('XDG_SESSION_TYPE') == 'x11':
+            editor = 'xdg-open'
+        elif 'EDITOR' in os.environ:
+            editor = os.environ['EDITOR']
+        ### launch config edit
+        subprocess.call([editor, self.filePath])
