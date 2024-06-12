@@ -270,7 +270,7 @@ def checkup_args(args):
                  "-o GRCh38.jf")
     ### --chimera level works only with --fasta-file option
     if args.chimera and not args.fasta_file:
-        sys.exit(f"{ERROR}Error: '--chimera' needs '--fasta-file' option.{ENDCOL}")
+        sys.exit(f"{ERROR}Error: '--chimera' needs '-f/--fasta-file' option.{ENDCOL}")
     ### temporary directory
     if not args.keep:
         if not args.tmpdir:

@@ -180,6 +180,30 @@ optional arguments:
 
 ```
 
+## Output
+
+kmerator generate 3 files:
+
+* kmers.fa
+* contigs.fa
+* report.md
+
+extract of kmers.fa:
+```
+>RUNX1:ENST00000675419.kmer3394 ct:3 ex:3/17
+TGAAGAGTATTTGAAAGCAGGACTTCAGAAC
+```
+* `kmer3394`: the first base is at this position in the canonical transcript or the given sequence (1 based)
+* `ct:3`: the kmer is associated to the 3rd contig of this gene/transcript, relative to `contigs.fa` file
+* `ex3/17`: the kmer is located in the 3rd exon of the 17
+
+extract of contigs.fa:
+```
+>RUNX1:ENST00000675419.contig_3 (at position 2314)
+ACTTCTTTGGGCCTCATAAACAACCACAGAACCACAAGTTGGGTAGCCTGGCAGTGTCAGAAGTCTGAACCCAG
+```
+* `contig_3`: contig count, relative to `ct:3` of  `kmers.fa` headers
+* `position 2314`: the first base of the contig is at this position (1 based)
 
 
 ## References

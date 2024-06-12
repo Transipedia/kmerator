@@ -213,109 +213,107 @@ class SpecificKmers:
                     '''
                     ### all kmers found (abund_in_tr) must be in isoforms
                     if not args['stringent'] and abund_in_tr and abund_in_tr == isoforms_with_mer_nb:
-
-                        # ~ handle_kmers(**params)
-                        ## kmers case
-                        knb += 1
-                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ({isoforms_with_mer_nb}/{isoforms_nb})\n{mer}")
                         ## contigs case
-                        if knb == 1:                                    # first kmer in contig
+                        if knb == 0:                                    # first kmer in contig
                             contig = mer
                             kmer_pos_prev = kmer_pos
                             contig_pos = kmer_pos
-                        elif knb>1 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
+                        elif knb>0 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
                             contig += mer[-1]
                             kmer_pos_prev = kmer_pos
                         else:                                           # store contig and create new
-                            specific_contigs.append(f">{given_up}:{ENST}.contig{c_nb} (at position {contig_pos})\n{contig}")
+                            specific_contigs.append(f">{given_up}:{ENST}.contig_{c_nb} (at position {contig_pos})\n{contig}")
                             c_nb += 1
                             contig = mer
                             kmer_pos_prev = kmer_pos
                             contig_pos = kmer_pos
+                        ## kmers case
+                        knb += 1
+                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
 
                     ### for gene level only, the stringent argument implies retaining kmers present in ALL isoforms of the gene
                     elif args['stringent'] and abund_in_tr == isoforms_nb == isoforms_with_mer_nb:
-                        ## kmers case
-                        knb += 1
-                        specific_kmers.append(f">{given_up}:{transcript}.kmer{kmer_pos} ({isoforms_with_mer_nb}/{isoforms_nb})\n{mer}")
                         ## contigs case
-                        if knb == 1:                                    # first kmer in contig
+                        if knb == 0:                                    # first kmer in contig
                             contig = mer
                             kmer_pos_prev = kmer_pos
                             contig_pos = kmer_pos
-                        elif knb>1 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
+                        elif knb>0 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
                             contig += mer[-1]
                             kmer_pos_prev = kmer_pos
                         else:                                           # store contig and create new
-                            specific_contigs.append(f">{given_up}:{transcript}.contig{c_nb} (at position {kmer_pos})\n{contig}")
+                            specific_contigs.append(f">{given_up}:{transcript}.contig_{c_nb} (at position {kmer_pos})\n{contig}")
                             c_nb += 1
                             contig = mer
                             kmer_pos_prev = kmer_pos
                             contig_pos = kmer_pos
+                        ## kmers case
+                        knb += 1
+                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
             ### Cases of transcripts 1) unannotated, 2) annotated.
             elif level == 'transcript':
                 ### Case of annotated transcripts
                 if args['selection'] and abund_in_tr == 1 and abund_in_ge <= 1:
-                    ## kmers case
-                    knb += 1
-                    specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos}\n{mer}")
                     ## contigs case
-                    if knb == 1:                                    # first kmer in contig
+                    if knb == 0:                                    # first kmer in contig
                         contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
-                    elif knb>1 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
+                    elif knb>0 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
                         contig += mer[-1]
                         kmer_pos_prev = kmer_pos
                     else:                                           # store contig and create new
-                        specific_contigs.append(f">{ENST}.contig{c_nb} (at position {contig_pos})\n{contig}")
+                        specific_contigs.append(f">{ENST}.contig_{c_nb} (at position {contig_pos})\n{contig}")
                         c_nb += 1
                         contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
+                    ## kmers case
+                    knb += 1
+                    specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
 
                 ### Case of unannotated transcripts
                 elif args['fasta_file'] and abund_in_tr <= self.args['max_on_transcriptome'] and abund_in_ge <= 1:     # max_on_transcriptome = 0 by default
-                    ### kmers case
-                    knb += 1
-                    specific_kmers.append(f">{f_id}.kmer{kmer_pos}\n{mer}")
                     ### contigs case
-                    if knb == 1:                                    # first kmer in contig
+                    if knb == 0:                                    # first kmer in contig
                         contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
-                    elif knb>1 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
+                    elif knb>0 and kmer_pos == kmer_pos_prev+1:     # add last bp to existing contig
                         contig += mer[-1]
                         kmer_pos_prev = kmer_pos
                     else:
-                        specific_contigs.append(f">{f_id}.contig{c_nb} (at position {contig_pos})\n{contig}")
+                        specific_contigs.append(f">{f_id}.contig_{c_nb} (at position {contig_pos})\n{contig}")
                         c_nb += 1
                         contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
+                    ### kmers case
+                    knb += 1
+                    specific_kmers.append(f">{f_id}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
 
             ### Case of chimera
             elif level == 'chimera':
                 if abund_in_tr == abund_in_ge == 0:
-                    ### kmers case
-                    knb += 1
-                    specific_kmers.append(f">{f_id}.kmer{kmer_pos}\n{mer}")
                     ### contig case
-                    if knb == 1:
+                    if knb == 0:
                         contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
-                    elif knb>1 and kmer_pos == kmer_pos_prev+1:
+                    elif knb>0 and kmer_pos == kmer_pos_prev+1:
                         contig += mer[-1]
                         kmer_pos_prev = kmer_pos
                     else:
-                        specific_contigs.append(f">{f_id}.contig{c_nb} (at position {contig_pos})\n{contig}")
+                        specific_contigs.append(f">{f_id}.contig_{c_nb} (at position {contig_pos})\n{contig}")
                         c_nb += 1
                         contig = mer
                         kmer_pos_prev = kmer_pos
                         contig_pos = kmer_pos
+                    ### kmers case
+                    knb += 1
+                    specific_kmers.append(f">{f_id}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
             ### not a gene, transcript, or chimera
             else:
                 raise KeyError(f"{RED}Error: level {level!r} unknown.{ENDCOL}")
@@ -325,11 +323,11 @@ class SpecificKmers:
 
         ### append last contig in list
         if args['fasta_file'] and contig:
-            specific_contigs.append(f">{f_id}.contig{c_nb} (at position {contig_pos})\n{contig}")
+            specific_contigs.append(f">{f_id}.contig_{c_nb} (at position {contig_pos})\n{contig}")
         elif level == "gene" and contig:
-            specific_contigs.append(f">{given_up}:{ENST}.contig{c_nb} (at position {contig_pos})\n{contig}")
+            specific_contigs.append(f">{given_up}:{ENST}.contig_{c_nb} (at position {contig_pos})\n{contig}")
         elif level == "transcript" and contig:
-            specific_contigs.append(f">{ENST}.contig{c_nb} (at position {contig_pos})\n{contig}")
+            specific_contigs.append(f">{ENST}.contig_{c_nb} (at position {contig_pos})\n{contig}")
 
         if args['debug']:
             if args['selection']:
