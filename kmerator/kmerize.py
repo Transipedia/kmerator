@@ -142,6 +142,7 @@ class SpecificKmers:
         d = {
             'specific_kmers': [],              # specific kmers list
             'specific_contigs': [],            # specific contigs list
+            lost_kmers = []                    # lost kmers list
             'contig': "",                      # initialize contig sequence
             'knb': 0,                          # kmer number (selected kmer)
             'c_nb': 1,                         # contig number
@@ -151,6 +152,7 @@ class SpecificKmers:
         '''
         level = 'gene' if item['type'] not in ['transcript', 'chimera'] else item['type']
         specific_kmers = []              # specific kmers list
+        lost_kmers = []                  # lost kmers list
         specific_contigs = []            # specific contigs list
         contig = ""                      # initialize contig sequence
         knb = 0                          # kmer number (selected kmer)
@@ -195,7 +197,7 @@ class SpecificKmers:
                 raise KeyError(f"Error: kmer not found in genome: {err}")
 
             if level == 'gene':
-                ### if the kmer is present/unique or does not exist (splicing?) on the genome
+                ### if the kmer is present/unique or does not exist (splice/chimera?) on the genome
                 if abund_in_ge <= 1:
 
                     isoforms_with_mer = [enst for enst, seq in isoforms_dict.items() if mer in seq]
@@ -251,6 +253,9 @@ class SpecificKmers:
                         ## kmers case
                         knb += 1
                         specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
+
+                else:
+                    lost_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
             ### Cases of transcripts 1) unannotated, 2) annotated.
             elif level == 'transcript':

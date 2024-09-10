@@ -25,7 +25,7 @@ Before using kmerator, a jellyfish index of the reference genome must be created
 
 ## Installation
 
-### Solution 1 (preferred)
+### Option 1 (preferred)
 
 Install with pip
 
@@ -33,7 +33,14 @@ Install with pip
 pip3 install kmerator
 ```
 
-### Solution 2
+
+With pip, it is also easy to install an older version
+
+```
+pip install kmerator==1.0.0
+```
+
+### Option 2
 
 Installation from github
 

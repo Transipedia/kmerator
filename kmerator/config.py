@@ -1,10 +1,11 @@
 
 import os
 import sys
-import info
 import subprocess
-from configparser import ConfigParser
+from configparser import ConfigParser, ParsingError
 
+import info
+import color
 
 DEFAULT_CONFIG = """
 [CMD_ARGS]
@@ -78,7 +79,14 @@ class Config:
             self._set_default()
         ### create a dict of config file
         self.content = ConfigParser()
-        self.content.read(self.filePath)
+        try:
+            self.content.read(self.filePath)
+        except  ParsingError as err:
+            for line, text in err.errors:
+                print(f"{color.RED}❗Syntax error at line {line} ({text})")
+            ithem = 'it' if len(err.errors) == 1 else 'them'
+            print(f"Please correct {ithem} in {err.source!r} file.")
+            sys.exit()
 
 
     def get_configPath(self, appname):
