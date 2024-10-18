@@ -52,7 +52,7 @@ ln -s $PWD/kmerator3/kmerator/kmerator.py /usr/local/bin/kmerator  # or somewher
 
 ## How to use kmerator
 
-Before all, remember that kmerator needs a jellyfish index of the genome. You must build it according to the species you are studying. You can store and name the index file whatever you want. Please note that you must **not use the jellyfish -C option** when building the reference genome index.
+Before all, remember that kmerator needs a jellyfish index of the genome. You must build it according to the species you are studying. You can store and name the index file whatever you want. Please note that you must **use the jellyfish -C option** when building the reference genome index.
 
 ### Configuration file
 
