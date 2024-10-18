@@ -75,7 +75,6 @@ class SpecificKmers:
         ### 3. From sequence, compute jellyfish againt the genome/transcriptome and convert results as dict ()
         kmercounts_genome_dict = self.jellyfish(seq_file, self.args['genome'])
         kmercounts_transcriptome_dict = self.jellyfish(seq_file, self.transcriptome_file)
-
         ### 4. filter the specific kmers, according to the arguments
         mesg = self.get_specific_kmers(item, kmercounts_transcriptome_dict, kmercounts_genome_dict)
 
@@ -254,8 +253,8 @@ class SpecificKmers:
                         knb += 1
                         specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
-                else:
-                    lost_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
+                # ~ else:
+                    # ~ lost_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
             ### Cases of transcripts 1) unannotated, 2) annotated.
             elif level == 'transcript':

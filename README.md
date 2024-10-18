@@ -45,7 +45,7 @@ pip install kmerator==1.0.0
 Installation from github
 
 ```
-git clone https://github.com/Transipedia/kmerator3.git
+git clone https://github.com/Transipedia/kmerator.git
 ln -s $PWD/kmerator3/kmerator/kmerator.py /usr/local/bin/kmerator  # or somewhere in your $PATH
 ```
 
