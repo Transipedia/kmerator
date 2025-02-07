@@ -176,6 +176,7 @@ def find_items(args, report, geneinfo_dict=None):
 
     return items
 
+
 def longest_transcript(args, ENSG):
     print(args)
     print(ENSG)
@@ -193,7 +194,6 @@ def longest_transcript(args, ENSG):
             longest_transcript = ':'.join(k.split(':')[1:2])
     # ~ print(f"{longest_variant = }")
     return longest_transcript
-
 
 
 def merged_results(args):

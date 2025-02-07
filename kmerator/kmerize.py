@@ -11,9 +11,12 @@ import shutil
 import subprocess
 import multiprocessing
 import copy
+import random
+import string
 
 from color import *
 
+MAX_CHARS = os.pathconf('/', 'PC_NAME_MAX') - 35
 
 class SpecificKmers:
     """ Class doc """
@@ -70,13 +73,13 @@ class SpecificKmers:
 
         ### 2. Write sequences in temporary file (needed by jellyfish)
         f_id = f"{item['given']}.{item['ENST']}"
-        seq_file = self.dump_seq(f_id, seq)
+        seq_file, flat_name = self.dump_seq(f_id, seq)
 
         ### 3. From sequence, compute jellyfish againt the genome/transcriptome and convert results as dict ()
         kmercounts_genome_dict = self.jellyfish(seq_file, self.args['genome'])
         kmercounts_transcriptome_dict = self.jellyfish(seq_file, self.transcriptome_file)
         ### 4. filter the specific kmers, according to the arguments
-        mesg = self.get_specific_kmers(item, kmercounts_transcriptome_dict, kmercounts_genome_dict)
+        mesg = self.get_specific_kmers(item, kmercounts_transcriptome_dict, kmercounts_genome_dict, flat_name)
 
         return mesg
 
@@ -85,14 +88,14 @@ class SpecificKmers:
         ### unpack item
         globals().update(item)
         ### 1. write separate file for each item
-        seq_file = self.dump_seq(item['f_id'], item['seq'])
+        seq_file, flat_name = self.dump_seq(item['f_id'], item['seq'])
 
         ### 2. From sequence, compute jellyfish against the genome/transcriptome and convert results as dict ()
         kmercounts_transcriptome_dict = self.jellyfish(seq_file, self.transcriptome_file)
         kmercounts_genome_dict = self.jellyfish(seq_file, self.args['genome'])
 
         ### 3. find to specific kmers
-        mesg = self.get_specific_kmers(item, kmercounts_transcriptome_dict, kmercounts_genome_dict)
+        mesg = self.get_specific_kmers(item, kmercounts_transcriptome_dict, kmercounts_genome_dict, flat_name)
 
         return mesg
 
@@ -103,11 +106,16 @@ class SpecificKmers:
         '''
         seq_dir = os.path.join(self.args['tmpdir'], 'sequences')
         os.makedirs(seq_dir, exist_ok=True)
+        ### replace forbiden characters
+        flat_name = f_id.replace('/', '--')
+        ### handle max file lenght
+        if len(flat_name) > MAX_CHARS:
+            flat_name = f"{f_id[:MAX_CHARS-15]}...{''.join(random.choices(string.ascii_letters, k=11))}"
         ### write sequence as fasta
-        seq_file = os.path.join(seq_dir, f"{f_id.replace('/', '--')}.fa")
+        seq_file = os.path.join(seq_dir, f"{flat_name}.fa")
         with open(seq_file, 'w') as fh:
-            fh.write(f">{f_id}\n{seq}\n")
-        return seq_file
+            fh.write(f">{flat_name}\n{seq}\n")
+        return seq_file, flat_name
 
 
     def jellyfish(self, seq_file, jf_file):
@@ -131,7 +139,7 @@ class SpecificKmers:
         return result_dict
 
 
-    def get_specific_kmers(self, item, kmercounts_transcriptome_dict, kmercounts_genome_dict):
+    def get_specific_kmers(self, item, kmercounts_transcriptome_dict, kmercounts_genome_dict, flat_name):
         '''
         Keep only specific kmers, according to the arguments
         '''
@@ -173,12 +181,12 @@ class SpecificKmers:
             contig_outfile = f"{given_up}-{ENST}-{level}-specific_contigs.fa"
         elif args['chimera']:
             ## When '--chimera' option is set
-            kmer_outfile = f"{f_id}-chimera-specific_kmers.fa"
-            contig_outfile = f"{f_id}-chimera-specific_contigs.fa"
+            kmer_outfile = f"{flat_name}-chimera-specific_kmers.fa"
+            contig_outfile = f"{flat_name}-chimera-specific_contigs.fa"
         elif args['fasta_file']:
             ## When '--fasta-file' option is set
-            kmer_outfile = f"{f_id}-transcript-specific_kmers.fa"
-            contig_outfile = f"{f_id}-transcript-specific_contigs.fa"
+            kmer_outfile = f"{flat_name}-transcript-specific_kmers.fa"
+            contig_outfile = f"{flat_name}-transcript-specific_contigs.fa"
 
 
         i = 1
@@ -230,7 +238,7 @@ class SpecificKmers:
                             contig_pos = kmer_pos
                         ## kmers case
                         knb += 1
-                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
+                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} tr:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
 
                     ### for gene level only, the stringent argument implies retaining kmers present in ALL isoforms of the gene
@@ -251,10 +259,10 @@ class SpecificKmers:
                             contig_pos = kmer_pos
                         ## kmers case
                         knb += 1
-                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
+                        specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} tr:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
                 # ~ else:
-                    # ~ lost_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} ex:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
+                    # ~ lost_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} tr:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
             ### Cases of transcripts 1) unannotated, 2) annotated.
             elif level == 'transcript':

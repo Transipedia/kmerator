@@ -1,0 +1,5 @@
+Changes in version 1.0.3
+
+- fasta ids can be longer than the maximum file name size
+- change the key 'ex' by 'tr' (tr for transcript)
+
