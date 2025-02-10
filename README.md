@@ -115,76 +115,76 @@ kmerator --info genes.txt             # genes/transcripts are in a file
 ## All arguments
 
 ```
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -s SELECTION [SELECTION ...], --selection SELECTION [SELECTION ...]
-                        list of gene IDs (ENSG, gene Symbol or alias) or
-                        transcript IDs (ENST) from which you want to extract
-                        specific kmers from. For genes, kmerator search
-                        specific kmers along the gene. For transcripts, it
-                        search specific kmers to the transcript. You can also
-                        give a file with yours genes/transcripts separated by
-                        space, tab or newline. If you want to use your own
-                        unannotated sequences, you must give your fasta file
-                        with --fasta-file option.
+  -s SELECTION [SELECTION ...], --selection SELECTION [SELECTION ...] 
+                        list of gene IDs (ENSG, gene Symbol or alias) or transcript 
+                        IDs (ENST) from which you want to extract specific kmers from. 
+                        For genes, kmerator search specific kmers along the gene. 
+                        For transcripts, it search specific kmers to the transcript. 
+                        You can also give a file with yours genes/transcripts 
+                        separated by space, tab or newline. If you want to use 
+                        your own unannotated sequences, you must give your fasta 
+                        file with --fasta-file option.
   -f FASTA_FILE, --fasta-file FASTA_FILE
-                        Use this option when yours sequences are unannonated
-                        or provided by a annotation file external from
-                        Ensembl. Otherwise, use --selection option.
+                        Use this option when yours sequences are unannonated or 
+                        provided by a annotation file external from Ensembl. 
+                        Otherwise, use --selection option.
   -d DATADIR, --datadir DATADIR
-                        Storage directory for kmerator datasets.We recommend
-                        to set this parameter by editing the configuration
-                        file (kmerator --edit)
+                        Storage directory for kmerator datasets.We recommend to 
+                        set this parameter by editing the configuration file 
+                        (kmerator --edit)
   -g GENOME, --genome GENOME
-                        Genome jellyfish index (.jf) to use for k-mers
-                        requests.
+                        Genome jellyfish index (.jf) to use for k-mers requests.
   -S SPECIE, --specie SPECIE
-                        indicate a specie referenced in Ensembl, to help,
-                        follow the link
-                        https://rest.ensembl.org/documentation/info/species.
-                        You can use the 'name', the 'display_name' or any
-                        'alias'. For example human or homo_sapiens are valid
-                        (default: human).
-  -k KMER_LENGTH, --kmer-length KMER_LENGTH
+                        indicate a specie referenced in Ensembl, to help, follow
+                        the link https://rest.ensembl.org/documentation/info/species.
+                        You can use the 'name', the 'display_name' or any 'alias'.
+                        For example human or homo_sapiens are valid
+                        (default:human).
+  -k KMER_LENGTH, --kmer-length KMER_LENGTH               
                         k-mer length that you want to use (default 31).
-  -r RELEASE, --release RELEASE
+  -r RELEASE, --release RELEASE         
                         release of transcriptome (default: last).
-  --chimera             Only with '--fasta-file' option.
-  --stringent           Only for genes with '--selection' option: use this
-                        option if you want to select gene-specific k-mers
-                        present in ALL transcripts for your gene. If false, a
-                        k-mer is considered as gene-specific if present in at
-                        least one isoform of your gene of interest.
-  -o OUTPUT, --output OUTPUT
-                        output directory, created if not exists (default:
-                        'output')
+  --stringent           Only for genes with '-s/--selection' option: use this
+                        option if you want to select gene-specific k-mers present
+                        in ALL transcripts for your gene. If false, a k-mer is 
+                        considered as gene-specific if present in at least one
+                        isoform of your gene of interest.
+  -T MAX_ON_TRANSCRIPTOME, --max-on-transcriptome MAX_ON_TRANSCRIPTOME
+                        Only for genes with '-f/--fasta-file' option: with
+                        unanotated data, specific kmers are not supposed to be
+                        found in the transcriptome, you can change this behavior
+                        for special cases (default: 0)
+  -G MAX_ON_GENOME, --max-on-genome MAX_ON_GENOME        
+                        Only for genes with '-f/--fasta-file' option: typically, 
+                        specific kmers are not supposed to be found more than 
+                        once in the genome, you can change
+                        this behavior for special cases, like chimera (default: 1)
+  -o OUTPUT, --output OUTPUT 
+                        output directory, created if not exists (default: 'output')
   -t THREAD, --thread THREAD
-                        run n process simultaneously (default: 1)
-  --tmpdir TMPDIR       directory to temporary file (default:
-                        /tmp/kmerator_<random>)
+                        run n process simultaneously (default: 1) 
+  --tmpdir TMPDIR       directory to temporary file (default: /tmp/kmerator_<random>) 
   -D, --debug           Show more details while Kmerator is running.
-  --keep                keep intermediate files (sequences, indexes, separate
+  --keep                keep intermediate files (sequences, indexes, separate 
                         kmers and contigs files).
-  -y, --yes             assumes 'yes' as the prompt answer, run non-
-                        interactively.
-  -e, --edit-config     Edit config file
-  -l, --list-dataset, --list-datasets
+  -y, --yes             assumes 'yes' as the prompt answer, run non-interactively.
+  -e, --edit-config     Edit config file 
+  -l, --list-dataset, --list-datasets 
                         list the local datasets (based on the datadir option).
-  --rm-dataset          remove a dataset, according with --specie and
+  --rm-dataset          remove a dataset, according with --specie and 
                         --release options
-  --mk-dataset          make a dataset, according with --specie and --release
-                        options
-  --last-avail, --last-available
+  --mk-dataset          make a dataset, according with --specie and --release options
+  --last-avail, --last-available    
                         last release available on Ensembl
-  -u, --update-dataset  builds a new dataset if a new version is found on
-                        Ensembl
-  --info gene [gene ...]
-                        get some information about gene. Multiple entries are
+  -u, --update-dataset  builds a new dataset if a new version is found on Ensembl
+  --info gene [gene ...] 
+                        get some information about gene. Multiple entries are 
                         allowed or a text file with list of genes
-  -a, --all             only with '--info' option. Give more info, like
-                        transcript sequences
+  -a, --all             only with '--info' option. Give more info, like 
+                        transcript sequences                       
   -v, --version         show program's version number and exit
-
 ```
 
 ## Output
@@ -197,7 +197,7 @@ kmerator generate 3 files:
 
 extract of kmers.fa:
 ```
->RUNX1:ENST00000675419.kmer3394 ct:3 ex:3/17
+>RUNX1:ENST00000675419.kmer3394 ct:3 tr:3/17
 TGAAGAGTATTTGAAAGCAGGACTTCAGAAC
 ```
 * `kmer3394`: the first base is at this position in the canonical transcript or the given sequence (1 based)

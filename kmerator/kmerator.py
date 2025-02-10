@@ -154,7 +154,7 @@ def find_items(args, report, geneinfo_dict=None):
 
     ### With '--fasta-file' option
     if args.fasta_file:
-        type = 'chimera' if args.chimera else 'transcript'
+        type = 'transcript'
         with open(args.fasta_file) as fh:
             seq = ""
             f_id = fh.readline()[1:].split(' ')[0].rstrip()

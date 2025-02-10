@@ -93,23 +93,35 @@ def usage(conf):
                         help="release of transcriptome (default: last).",
                         default="last",
                         )
-    parser.add_argument('--chimera',
-                        action='store_true',
-                        help="Only with '--fasta-file' option.",
-                        )
+    # ~ parser.add_argument('--chimera',
+                        # ~ action='store_true',
+                        # ~ help="Only with '-f/--fasta-file' option.",
+                        # ~ )
     parser.add_argument('--stringent',
                         action='store_true',
                         help=(
-                            "Only for genes with '--selection' option: use this option if you want "
+                            "Only for genes with '-s/--selection' option: use this option if you want "
                             "to select gene-specific k-mers present in ALL transcripts for your "
                             "gene. If false, a k-mer is considered as gene-specific if present "
                             "in at least one isoform of your gene of interest."
                             ),
                         )
-    parser.add_argument('--max-on-transcriptome',
-                        type=float,
-                        help=argparse.SUPPRESS,
+    parser.add_argument('-T', '--max-on-transcriptome',
+                        type=int,
+                        help=("Only for genes with '-f/--fasta-file' option: with unanotated data, "
+                            "specific kmers are not supposed to be found in the transcriptome, you "
+                            "can change this behavior for special cases (default: 0)"
+                            ),
                         default=0,
+                        )
+    parser.add_argument('-G', '--max-on-genome',
+                        type=int,
+                        help=(
+                            "Only for genes with '-f/--fasta-file' option: typically, specific "
+                            "kmers are not supposed to be found more than once in the genome, you "
+                            "can change this behavior for special cases, like chimera (default: 1)"
+                            ),
+                        default=1 if any(set(['-f', '--fasta-file']) & set(sys.argv)) else None,
                         )
     parser.add_argument('-o', '--output',
                         help="output directory, created if not exists (default: 'output')",
@@ -269,8 +281,14 @@ def checkup_args(args):
                  f"{YELLOW}jellyfish count /genomes/GRCh38.fa -m 31 -s 100M -t 8 --canonical "
                  "-o GRCh38.jf")
     ### --chimera level works only with --fasta-file option
-    if args.chimera and not args.fasta_file:
-        sys.exit(f"{ERROR}Error: '--chimera' needs '-f/--fasta-file' option.{ENDCOL}")
+    # ~ if args.chimera and not args.fasta_file:
+        # ~ sys.exit(f"{ERROR}Error: '--chimera' needs '-f/--fasta-file' option.{ENDCOL}")
+    ### --max-on-genome level works only with --fasta-file option
+    if args.max_on_genome and not args.fasta_file:
+        sys.exit(f"{ERROR}Error: '--max-on-genome' needs '-f/--fasta-file' option.{ENDCOL}")
+    ### --max-on-transcriptome level works only with --fasta-file option
+    if args.max_on_transcriptome and not args.fasta_file:
+        sys.exit(f"{ERROR}Error: '--max-on-transcriptome' needs '-f/--fasta-file' option.{ENDCOL}")
     ### temporary directory
     if not args.keep:
         if not args.tmpdir:

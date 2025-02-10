@@ -157,7 +157,7 @@ class SpecificKmers:
             'contig_pos': 0,                   # position of retained contig
         }
         '''
-        level = 'gene' if item['type'] not in ['transcript', 'chimera'] else item['type']
+        level = 'gene' if item['type'] != 'transcript' else item['type']
         specific_kmers = []              # specific kmers list
         lost_kmers = []                  # lost kmers list
         specific_contigs = []            # specific contigs list
@@ -179,10 +179,10 @@ class SpecificKmers:
             ## When '--selection' option is set
             kmer_outfile = f"{given_up}-{ENST}-{level}-specific_kmers.fa"
             contig_outfile = f"{given_up}-{ENST}-{level}-specific_contigs.fa"
-        elif args['chimera']:
-            ## When '--chimera' option is set
-            kmer_outfile = f"{flat_name}-chimera-specific_kmers.fa"
-            contig_outfile = f"{flat_name}-chimera-specific_contigs.fa"
+        # ~ elif args['chimera']:
+            # ~ ## When '--chimera' option is set
+            # ~ kmer_outfile = f"{flat_name}-chimera-specific_kmers.fa"
+            # ~ contig_outfile = f"{flat_name}-chimera-specific_contigs.fa"
         elif args['fasta_file']:
             ## When '--fasta-file' option is set
             kmer_outfile = f"{flat_name}-transcript-specific_kmers.fa"
@@ -213,13 +213,6 @@ class SpecificKmers:
                     # knb, specific_kmers, given_up, transcript, kmer_pos, isoforms_with_mer_nb,
                     # isoforms_nb, mer, contig, kmer_pos_prev, kmer_pos, contig_pos
 
-                    '''
-                    TODO
-                    the algo to find specific kmers, because there are repeated 5 times, but not so easy
-                        - many arguments to pass to the method are numerous
-                        - string to pass are not already the same
-                        - WARNING of performances losses
-                    '''
                     ### all kmers found (abund_in_tr) must be in isoforms
                     if not args['stringent'] and abund_in_tr and abund_in_tr == isoforms_with_mer_nb:
                         ## contigs case
@@ -264,7 +257,7 @@ class SpecificKmers:
                 # ~ else:
                     # ~ lost_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb} tr:{isoforms_with_mer_nb}/{isoforms_nb}\n{mer}")
 
-            ### Cases of transcripts 1) unannotated, 2) annotated.
+            ### Cases of transcripts 1) annotated, 2) unannotated.
             elif level == 'transcript':
                 ### Case of annotated transcripts
                 if args['selection'] and abund_in_tr == 1 and abund_in_ge <= 1:
@@ -287,7 +280,7 @@ class SpecificKmers:
                     specific_kmers.append(f">{given_up}:{ENST}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
 
                 ### Case of unannotated transcripts
-                elif args['fasta_file'] and abund_in_tr <= self.args['max_on_transcriptome'] and abund_in_ge <= 1:     # max_on_transcriptome = 0 by default
+                elif args['fasta_file'] and abund_in_tr <= self.args['max_on_transcriptome'] and abund_in_ge <= self.args['max_on_genome']:     # max_on_transcriptome = 0 by default
                     ### contigs case
                     if knb == 0:                                    # first kmer in contig
                         contig = mer
@@ -306,27 +299,27 @@ class SpecificKmers:
                     knb += 1
                     specific_kmers.append(f">{f_id}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
 
-            ### Case of chimera
-            elif level == 'chimera':
-                if abund_in_tr == abund_in_ge == 0:
-                    ### contig case
-                    if knb == 0:
-                        contig = mer
-                        kmer_pos_prev = kmer_pos
-                        contig_pos = kmer_pos
-                    elif knb>0 and kmer_pos == kmer_pos_prev+1:
-                        contig += mer[-1]
-                        kmer_pos_prev = kmer_pos
-                    else:
-                        specific_contigs.append(f">{f_id}.contig_{c_nb} (at position {contig_pos})\n{contig}")
-                        c_nb += 1
-                        contig = mer
-                        kmer_pos_prev = kmer_pos
-                        contig_pos = kmer_pos
-                    ### kmers case
-                    knb += 1
-                    specific_kmers.append(f">{f_id}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
-            ### not a gene, transcript, or chimera
+            # ~ ### Case of chimera
+            # ~ elif level == 'chimera':
+                # ~ if abund_in_tr == abund_in_ge == 0:
+                    # ~ ### contig case
+                    # ~ if knb == 0:
+                        # ~ contig = mer
+                        # ~ kmer_pos_prev = kmer_pos
+                        # ~ contig_pos = kmer_pos
+                    # ~ elif knb>0 and kmer_pos == kmer_pos_prev+1:
+                        # ~ contig += mer[-1]
+                        # ~ kmer_pos_prev = kmer_pos
+                    # ~ else:
+                        # ~ specific_contigs.append(f">{f_id}.contig_{c_nb} (at position {contig_pos})\n{contig}")
+                        # ~ c_nb += 1
+                        # ~ contig = mer
+                        # ~ kmer_pos_prev = kmer_pos
+                        # ~ contig_pos = kmer_pos
+                    # ~ ### kmers case
+                    # ~ knb += 1
+                    # ~ specific_kmers.append(f">{f_id}.kmer{kmer_pos} ct:{c_nb}\n{mer}")
+            ### not a gene or transcript
             else:
                 raise KeyError(f"{RED}Error: level {level!r} unknown.{ENDCOL}")
 

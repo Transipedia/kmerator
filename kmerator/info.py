@@ -5,7 +5,7 @@ Genral informations on to the program.
 """
 
 APPNAME = "kmerator"
-VERSION = "1.0.3"
+VERSION = "2.0.0"
 VERSION_DATASET = 1
 SHORTDESC = "Find specific gene or transcript kmers. And more."
 LICENCE = "GPL3"
@@ -37,7 +37,7 @@ EXAMPLES:
 Before all, remember that kmerator needs a jellyfish index of the genome.
 
 Good idea before requests kmerator:
- kmerator -e             # Edit config file to set default options
+ kmerator -e                     # Edit config file to set default options
 
 Some requests:
  kmerator -s npm1 braf           # get specific kmers from NPM1 and BRAF genes
