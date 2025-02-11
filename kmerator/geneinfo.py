@@ -124,10 +124,10 @@ def output(args, geneinfo_dict, info, not_found, transcriptome_dict):
                     for transcript in transcripts:
                         seq = transcriptome_dict.get(transcript, f"{col.RED}✘✘✘{col.ENDCOL} (sequence not found)")
                         length = f" ({len(seq)})" if seq[0] in ['A', 'T', 'C', 'G'] else ""
-                        print(_text_format(23, f"{transcript}{length}", seq, pos_key='top'))
+                        # ~ print(_text_format(23, f"{transcript}{length}", seq, pos_key='top'))
+                        print(f"{transcript}{length}\n{seq}")
             else:
                 print(_text_format(23, f"  Transcripts ({len(val['transcript'])})", ' '.join(val['transcript'])))
-
             print()
 
     ### output not found items

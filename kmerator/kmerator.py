@@ -199,7 +199,7 @@ def longest_transcript(args, ENSG):
 def merged_results(args):
     if not os.path.isdir(os.path.join(args.tmpdir, 'kmers')):
         return None
-    for item in ['kmers', 'contigs']:
+    for item in ['kmers', 'contigs', 'masked']:
         files = os.listdir(os.path.join(args.tmpdir, item))
         if files:
             merged_file = os.path.join(args.output, f"{item}.fa")
