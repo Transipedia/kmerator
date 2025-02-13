@@ -81,6 +81,7 @@ class Dataset:
         """ Class initialiser """
         self.args = args
         self.base_url = "http://ftp.ensembl.org/pub"
+        self.attended = ['transcriptome.pkl', f'k{self.args.kmer_length}.transcriptome.jf', 'geneinfo.pkl', 'report.md']
         self.assembly = None
         self.ebl_releases = None
         self.transcriptome_fa = None    # transcriptome fasta path
@@ -203,7 +204,6 @@ class Dataset:
         - Check if dataset is present in datadir
         - assign files names to matching variables
         """
-        attended  = ['transcriptome_pkl', 'transcriptome_jf', 'geneinfo_pkl', 'report_md']
         found = 0
         try:
             all_files = next(os.walk(self.args.datadir))[2]
@@ -220,11 +220,11 @@ class Dataset:
                 ext = f"{file[3]}.{file[4]}"
             except IndexError:
                 continue
-            if specie == self.args.specie and release == self.args.release and item in attended:
+            if specie == self.args.specie and release == self.args.release and item in self.attended:
                 found += 1
                 basename = f"{specie}.{assembly}.{release}.{ext}"
                 setattr(self, item, os.path.join(self.args.datadir, basename))
-        return True if found == len(attended) else False
+        return True if found == len(self.attended) else False
 
 
     def define_dataset(self):
@@ -301,43 +301,48 @@ class Dataset:
 
     def list(self):
         """ List local releases """
-        attended  = ['transcriptome.pkl', 'transcriptome.jf', 'geneinfo.pkl', 'report.md']
+        # ~ attended  = ['transcriptome.pkl', 'transcriptome.jf', 'geneinfo.pkl', 'report.md']
         releases = {}
         files = next(os.walk(self.args.datadir))[2]
         not_a_dataset_file = []
 
         ### dict of releases : {<specie>: {<release>:[<file1>, <file2>]} }
-        for file in files:
+        for str_file in files:
             try:
-                file = file.split('.')
-                specie = file[0]
+                file = str_file.split('.')
+                specie = '.'.join(file[:2])
                 release = file[2]
-                item = f"{file[3]}.{file[4]}"
-                releases.setdefault(specie, {}).setdefault(release, []).append(item)
+                # ~ item = f"{file[3]}.{file[4]}"
+                item = '.'.join(file[-2:])
+                releases.setdefault(specie, {}).setdefault(release, []).append(str_file)
             except IndexError:
                 not_a_dataset_file.append(file)
-
         ### classify the releases (complete or incomplete)
         releases_ok = {}
         releases_ko = {}
         for specie in releases:
             for release in releases[specie]:
-                if all(map(lambda v: v in releases[specie][release], attended )):
+                attended_files = list(map(lambda val: f"{specie}.{release}.{val}", self.attended))
+                founded_files = list(map(lambda v: v in releases[specie][release], attended_files))
+                # ~ print("attended:\n", attended_files)
+                # ~ print("founded:\n", founded_files)
+                # ~ print("---")
+                if all(founded_files):
                     releases_ok.setdefault(specie, []).append(release)
                 else:
                     releases_ko.setdefault(specie, []).append(release)
-
         ### Show releases
         print(f"\n {YELLOW}Location of datasets:{ENDCOL} {self.args.datadir}")
+        print(  f" {YELLOW}kmer length:{ENDCOL} {self.args.kmer_length}")
         if releases_ok:
             print(f"\n {YELLOW}Datasets found:{ENDCOL}", *[f"{k}: {', '.join([str(a) for a in sorted([int(i) for i in v])])}" for k,v in releases_ok.items()], sep="\n  - ")
-            if releases_ko:
-                print(f"\n {YELLOW}Incompletes datasets:{ENDCOL}")
-                for specie, releases in releases_ko.items():
-                    print(f"  - {specie}: {', '.join(releases)}{ENDCOL}")
-
         else:
             print(f"\n {YELLOW}No releases found{ENDCOL}")
+        if releases_ko:
+            print(f"\n {YELLOW}Incompletes datasets:{ENDCOL}")
+            for specie, releases in releases_ko.items():
+                print(f"  - {specie}: {', '.join(releases)}{ENDCOL}")
+
         print()
 
         ### Other file found in dataset location
