@@ -39,7 +39,7 @@ class SpecificKmers:
             self.geneinfo_dict = manager.dict(geneinfo_dict)
 
         ### launch workers
-        self.transcriptome_file = os.path.join(args.datadir, f"{args.specie}.{args.assembly}.{args.release}.transcriptome.jf")
+        self.transcriptome_file = os.path.join(args.datadir, f"{args.specie}.{args.assembly}.{args.release}.k{args.kmer_length}.transcriptome.jf")
         try:
             with multiprocessing.Pool(processes=args.thread) as pool:
                 if args.selection:
@@ -371,8 +371,7 @@ class SpecificKmers:
                 mesg = f"{f_id}: no specific kmers found"
             return 'failed', mesg
         ### masked kmers
-        if masked_kmers:
-            self.write(args, masked_outfile, masked_kmers, 'masked')
+        self.write(args, masked_outfile, masked_kmers, 'masked')
         ### report
         if args['selection']:
             mesg = f"{given}: {item['symbol']}:{ENST} - kmers/contigs: {len(specific_kmers)}/{len(specific_contigs)} (level: {level})"

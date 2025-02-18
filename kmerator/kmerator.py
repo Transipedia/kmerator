@@ -192,7 +192,6 @@ def longest_transcript(args, ENSG):
         if v > length:
             length = v
             longest_transcript = ':'.join(k.split(':')[1:2])
-    # ~ print(f"{longest_variant = }")
     return longest_transcript
 
 

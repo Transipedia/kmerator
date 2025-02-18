@@ -17,6 +17,7 @@ Other links:
   - https://lists.ensembl.org/pipermail/dev_ensembl.org/2013-January/003357.html
 '''
 
+
 import sys
 import os
 import argparse
@@ -25,6 +26,7 @@ from bs4 import BeautifulSoup
 import gzip
 import pickle
 import threading
+import subprocess
 
 import info
 from color import *
@@ -81,16 +83,16 @@ class Dataset:
         """ Class initialiser """
         self.args = args
         self.base_url = "http://ftp.ensembl.org/pub"
-        self.attended = ['transcriptome.pkl', f'k{self.args.kmer_length}.transcriptome.jf', 'geneinfo.pkl', 'report.md']
-        self.assembly = None
-        self.ebl_releases = None
-        self.transcriptome_fa = None    # transcriptome fasta path
-        self.transcriptome_pkl = None   # transcriptome pickle path
-        self.transcriptome_jf = None    # transcriptome jellyfish path
-        self.geneinfo_pkl = None        # geneinfo path
-        self.report_md = None           # report path
-        self.report = []                # report
-        self.ebl_releases = []          # all releases avalaible on Ensembl
+        self.attended = ['transcriptome.pkl', 'transcriptome.jf', 'geneinfo.pkl', 'report.md']
+        # ~ self.assembly = None
+        self.transcriptome_fa = None         # transcriptome fasta path
+        self.transcriptome_pkl = None        # transcriptome pickle path
+        self.transcriptome_jf = None         # transcriptome jellyfish path
+        self.geneinfo_pkl = None             # geneinfo path
+        self.report_md = None                # report path
+        self.report = []                     # report
+        self.ebl_releases = []               # all releases avalaible on Ensembl
+        self.dataset = self.set_dataset_dict()   # {complete: {specie: {release:[k31,...]}},partial:..., other:...}
         ### Is args.specie an alternative name ?
         if self.args.specie.lower() in species:
             self.args.specie =  species[self.args.specie.lower()]
@@ -98,8 +100,48 @@ class Dataset:
             self.args.release = self.get_ebl_current_release()
             self.get_ebl_releases()
         ### check if dataset is locally present and assign variable for each file
-        if args.datadir:
+        if args.datadir and not self.args.list_dataset:
             self.dataset_ok = self.dataset_here()
+
+    
+    def set_dataset_dict(self):
+        ### general variables
+        files = next(os.walk(self.args.datadir))[2]
+        attended = ['transcriptome.pkl', 'transcriptome.jf', 'geneinfo.pkl', 'report.md']
+        dataset = {"complete": {},  # set complete 
+                   "partial": {},   # set uncomplete, miss some files
+                   "other": [],}     # files not part of dataset
+        releases = {}
+        
+        ### dict of releases found: {<specie>: {<release>:[<file1>, <file2>]} }
+        for file in files:
+            try:
+                file_l = file.split('.')
+                specie = ".".join(file_l[:2])
+                release = int(file_l[2])
+                releases.setdefault(specie, {}).setdefault(release, []).append(file)
+            except (IndexError, ValueError):
+                dataset["other"].append(file)
+
+        ### classify the releases (complete or incomplete)
+        for specie in releases:
+            for release, file_list in releases[specie].items():
+                founded_items = set(".".join(f.split(".")[-2:]) for f in file_list)
+                founded_files = list(map(lambda v: v in founded_items, self.attended))
+                if all(founded_files):
+                    dataset['complete'].setdefault(specie, {})[int(release)] = []
+                else:
+                    dataset['partial'].setdefault(specie, []).append(int(release))
+
+        ### find for different version of jellyfish indexes of transcriptome
+        for specie, rels in dataset['complete'].items():
+            for rel in rels:
+                for file in releases[specie][rel]:
+                    if file.endswith('.transcriptome.jf'):
+                        k = file.split('.')[3] if file.split('.')[3].startswith('k') else 'k?'
+                        dataset['complete'][specie][rel].append(k)
+        
+        return dataset
 
 
     def get_ebl_current_release(self):
@@ -117,7 +159,6 @@ class Dataset:
         core = [ a.text for a in soup.findAll('a') if a.text.startswith(f"{self.args.specie}_core")]
         ebl_current_release = core[0].split('_')[-2]
         return ebl_current_release
-
 
 
     def get_ebl_releases(self):
@@ -164,6 +205,7 @@ class Dataset:
 
 
     def get_local_releases(self):
+        print("get_local_releases()", {int(i.split('.')[2]) for i in next(os.walk(self.args.datadir))[2] if i.split('.')[0] == self.args.specie} )
         return {int(i.split('.')[2]) for i in next(os.walk(self.args.datadir))[2] if i.split('.')[0] == self.args.specie}
 
 
@@ -188,10 +230,11 @@ class Dataset:
 
 
     def load_transcriptome(self):
-        """ Load geneinfo.pkl as dict"""
+        """ Load transcriptome.pkl as dict"""
         ### if dataset not found, ask to install
         if not self.dataset_ok:
-            self.build()
+            self.build()                                # build dataset
+            self.dataset = self.set_dataset_dict()      # re-compute datasets
             self.dataset_ok = self.dataset_here()
         ### Load transcriptome
         with open(self.transcriptome_pkl, 'rb') as fic:
@@ -203,33 +246,41 @@ class Dataset:
         """
         - Check if dataset is present in datadir
         - assign files names to matching variables
-        """
-        found = 0
-        try:
-            all_files = next(os.walk(self.args.datadir))[2]
-        except StopIteration:
-            sys.exit(f"{RED}Error: unable to reach {self.args.datadir!r}.{ENDCOL}")
-        ### dict of releases : {specie: {release:[file1, file2]} }
-        for file in all_files:
-            try:
-                file = file.split('.')
-                specie = file[0]
-                assembly = file[1]
-                release = file[2]
-                item = f"{file[3]}_{file[4]}"
-                ext = f"{file[3]}.{file[4]}"
-            except IndexError:
-                continue
-            if specie == self.args.specie and release == self.args.release and item in self.attended:
-                found += 1
-                basename = f"{specie}.{assembly}.{release}.{ext}"
-                setattr(self, item, os.path.join(self.args.datadir, basename))
-        return True if found == len(self.attended) else False
+        - jump to rename_jf() if the releases jellyfish file names are in a older version (without kmer size)
+         """
+        found = False
+        
+        releases_found = []
+        for specie, releases in self.dataset['complete'].items():
+            if specie.startswith(self.args.specie):
+                assembly = specie.split('.')[1]
+                releases_found = releases.get(int(self.args.release), [])
+        if f"k{self.args.kmer_length}" in releases_found:
+            found = True
+        elif 'k?' in releases_found:
+            rename = input("The dataset has a kmer value not specified in the jellyfish file name, "
+                           "because it was created with an older version of kmerator. Rename files "
+                           "to new format and continue? [Yn]: ").lower() or 'y'
+            if rename == 'y':
+                self.rename_jf()
+                self.dataset = self.set_dataset_dict()
+                self.dataset_here()
+        ### Assign name to file attributes
+        if found:
+            basename = f"{self.args.specie}.{assembly}.{self.args.release}"
+            pathbasename = os.path.join(self.args.datadir, basename)
+            self.transcriptome_fa = f"{pathbasename}.transcriptome.fa"
+            self.transcriptome_pkl = f"{pathbasename}.transcriptome.pkl" 
+            self.transcriptome_jf = f"{pathbasename}.k{self.args.kmer_length}.transcriptome.jf"
+            self.geneinfo_pkl = f"{pathbasename}.geneinfo.pkl"
+            self.report_md = f"{pathbasename}.report.md"
+            
+        return found
 
 
     def define_dataset(self):
         """
-        Define the names of the local files for the dataset
+        Define the names of the local files for the specified dataset
         """
 
         ### Request Ensembl to get info (assembly name, release number, list of releases)
@@ -252,7 +303,7 @@ class Dataset:
         basename = f"{self.args.specie}.{self.args.assembly}.{self.args.release}"
         self.geneinfo_pkl = os.path.join(self.args.datadir, f"{basename}.geneinfo.pkl")
         self.transcriptome_pkl = os.path.join(self.args.datadir, f"{basename}.transcriptome.pkl")
-        self.transcriptome_jf = os.path.join(self.args.datadir, f"{basename}.transcriptome.jf")
+        self.transcriptome_jf = os.path.join(self.args.datadir, f"{basename}.k{self.args.kmer_length}.transcriptome.jf")
         self.report_md = os.path.join(self.args.datadir, f"{basename}.report.md")
 
 
@@ -292,6 +343,7 @@ class Dataset:
         th2.start()
         th1.join()
         th2.join()
+        
 
         ### write report
         with open(self.report_md, 'w') as fh:
@@ -301,54 +353,27 @@ class Dataset:
 
     def list(self):
         """ List local releases """
-        # ~ attended  = ['transcriptome.pkl', 'transcriptome.jf', 'geneinfo.pkl', 'report.md']
-        releases = {}
-        files = next(os.walk(self.args.datadir))[2]
-        not_a_dataset_file = []
-
-        ### dict of releases : {<specie>: {<release>:[<file1>, <file2>]} }
-        for str_file in files:
-            try:
-                file = str_file.split('.')
-                specie = '.'.join(file[:2])
-                release = file[2]
-                # ~ item = f"{file[3]}.{file[4]}"
-                item = '.'.join(file[-2:])
-                releases.setdefault(specie, {}).setdefault(release, []).append(str_file)
-            except IndexError:
-                not_a_dataset_file.append(file)
-        ### classify the releases (complete or incomplete)
-        releases_ok = {}
-        releases_ko = {}
-        for specie in releases:
-            for release in releases[specie]:
-                attended_files = list(map(lambda val: f"{specie}.{release}.{val}", self.attended))
-                founded_files = list(map(lambda v: v in releases[specie][release], attended_files))
-                # ~ print("attended:\n", attended_files)
-                # ~ print("founded:\n", founded_files)
-                # ~ print("---")
-                if all(founded_files):
-                    releases_ok.setdefault(specie, []).append(release)
-                else:
-                    releases_ko.setdefault(specie, []).append(release)
         ### Show releases
         print(f"\n {YELLOW}Location of datasets:{ENDCOL} {self.args.datadir}")
-        print(  f" {YELLOW}kmer length:{ENDCOL} {self.args.kmer_length}")
-        if releases_ok:
-            print(f"\n {YELLOW}Datasets found:{ENDCOL}", *[f"{k}: {', '.join([str(a) for a in sorted([int(i) for i in v])])}" for k,v in releases_ok.items()], sep="\n  - ")
+        if self.dataset['complete']:
+            to_print = f"\n {YELLOW}Datasets found:{ENDCOL}\n"
+            for specie, releases in self.dataset['complete'].items():
+                rels = sorted([(int(k),v) for k,v in releases.items()])
+                for rel in rels:
+                    to_print += f"  - {specie.split('.')[0]}: {rel[0]} ({', '.join(sorted(rel[1]))})\n"
+            print(to_print)
         else:
-            print(f"\n {YELLOW}No releases found{ENDCOL}")
-        if releases_ko:
-            print(f"\n {YELLOW}Incompletes datasets:{ENDCOL}")
-            for specie, releases in releases_ko.items():
-                print(f"  - {specie}: {', '.join(releases)}{ENDCOL}")
-
+            print(f"\n {YELLOW}No releases found{ENDCOL}\n")
+        if self.dataset['partial']:
+            print(f" {YELLOW}Incompletes datasets:{ENDCOL}")
+            for specie, releases in self.dataset['partial'].items():
+                print(f"  - {specie.split('.')[0]}: {', '.join([str(i) for i in releases])}{ENDCOL}")    
         print()
 
         ### Other file found in dataset location
-        if not_a_dataset_file:
+        if self.dataset['other']:
             print(f" {YELLOW}Files not part of a dataset:{ENDCOL}")
-            print(*[f"  - {i[0]}.{i[1]}" for i in not_a_dataset_file], sep="\n")
+            print(*[f"  - {i}" for i in self.dataset['other']], sep="\n")
         print()
 
         ### exit
@@ -357,29 +382,48 @@ class Dataset:
 
     def remove(self):
         """ remove a release """
-        ### list dataset file for this specie/release
-        to_delete = []
+        ### list dataset files this specie/release
+        release_files = []
+        jellyfish_files = []
         for file in next(os.walk(self.args.datadir))[2]:
             l_file = file.split('.')
             try:
                 specie, assembly, release = l_file[:3]
                 if self.args.specie == specie and self.args.release == release:
-                    to_delete.append(file)
+                    release_files.append(file)
+                    if l_file[-1] == 'jf' and l_file[-2] == 'transcriptome':
+                        jellyfish_files.append(file)
             except ValueError:
                 continue
+        ### if release empty
+        if not release_files:
+            print(f"Dataset not found for {self.args.specie!r}, release {self.args.release!r}.")
+            exit.gracefully(self.args)
+        ### if multiple jellyfish for the release, remove only the transcriptome file
+        if len(jellyfish_files) > 1:
+            for file in jellyfish_files:
+                k = file.split('.')[3]
+                if k.startswith('k'):
+                    if int(k[1:]) == self.args.kmer_length:
+                        release_files = [file]
+                        break
+                elif k == 'transcriptome':
+                    release_files = [file]
+
         ### if not files to delete
-        if not to_delete:
+        if not release_files:
             print(f"Dataset not found for {self.args.specie!r}, release {self.args.release!r}.")
             exit.gracefully(self.args)
         ### Ask to remove
         resp = 'y'
         if not self.args.yes:
             print(f"\nspecie: {self.args.specie} - release: {self.args.release}\n")
-            print("Files to delete", *to_delete, sep='\n - ')
+            # ~ print("Files to delete", *to_delete, sep='\n - ')
+            print("Files to delete", *release_files, sep='\n - ')
             resp = input("\nDelete files (Yn): ") or 'y'
         ### Remove
         if not resp.lower() == 'n':
-            for file in to_delete:
+            for file in release_files:
                 os.remove(os.path.join(self.args.datadir, file))
         else:
             print("\nAborted by user.  ")
@@ -423,6 +467,36 @@ class Dataset:
     def last_available(self):
         print(self.get_ebl_current_release())
         exit.gracefully(self.args)
+
+
+    def rename_jf(self):
+        """
+        Migrate dataset to new version: 
+        Before version 2.3.0, the jellyfish index file name did not containt the size of the kmers.
+        rename_jf aims to rename file, adding kmer size in the name, according the 2.3.0 version
+        """
+        files = next(os.walk(self.args.datadir))[2]
+        ### get k value
+        get_k = lambda res,i: res[i + 1] 
+        # ~ print(files)
+        for file in files:
+            if file.endswith(".transcriptome.jf"):
+                file_l = file.split(".")
+                k_expected = file_l[3]
+                if len(file_l) == 5 and k_expected == "transcriptome":
+                    ### jellyfish keep the command line used to build the jf file.
+                    cmd_get = f"jellyfish info {os.path.join(self.args.datadir, file)} | head -1"
+                    res = subprocess.check_output(cmd_get, shell=True, text=True).split(' ')
+                    for opt in ('-m', '--mer-len'):
+                        k = f"k{get_k(res, res.index(opt))}"
+                        break
+                    file_l.insert(3, k)
+                    new_name = '.'.join(file_l)
+                    cmd_set = f"mv {os.path.join(self.args.datadir, file)} {os.path.join(self.args.datadir, new_name)}"
+                    try:
+                        subprocess.check_output(cmd_set, shell=True)
+                    except Exception as e:
+                        sys.exit(e)
 
 
 def usage():
