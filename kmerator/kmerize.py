@@ -317,7 +317,6 @@ class SpecificKmers:
                                     f"transcriptome:{abund_in_tr}\n{mer}"
                                     )
 
-
             # ~ ### Case of chimera
             # ~ elif level == 'chimera':
                 # ~ if abund_in_tr == abund_in_ge == 0:
@@ -341,7 +340,6 @@ class SpecificKmers:
             ### not a gene or transcript
             else:
                 raise KeyError(f"{RED}Error: level {level!r} unknown.{ENDCOL}")
-
             i += 1
 
 

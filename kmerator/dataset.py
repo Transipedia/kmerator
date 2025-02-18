@@ -248,23 +248,30 @@ class Dataset:
         - assign files names to matching variables
         - jump to rename_jf() if the releases jellyfish file names are in a older version (without kmer size)
          """
-        found = False
+        def is_release_found(self):
+            ### check if the specified release is present in the datasets
+            releases_found = []
+            for specie, releases in self.dataset['complete'].items():
+                if specie.startswith(self.args.specie):
+                    assembly = specie.split('.')[1]
+                    releases_found = releases.get(int(self.args.release), [])
+            if f"k{self.args.kmer_length}" in releases_found: 
+                return releases_found, assembly, True
+            else:
+                return releases_found, assembly, False        
+        releases_found, assembly, found = is_release_found(self)
         
-        releases_found = []
-        for specie, releases in self.dataset['complete'].items():
-            if specie.startswith(self.args.specie):
-                assembly = specie.split('.')[1]
-                releases_found = releases.get(int(self.args.release), [])
-        if f"k{self.args.kmer_length}" in releases_found:
-            found = True
-        elif 'k?' in releases_found:
-            rename = input("The dataset has a kmer value not specified in the jellyfish file name, "
-                           "because it was created with an older version of kmerator. Rename files "
-                           "to new format and continue? [Yn]: ").lower() or 'y'
+        ### Handle older file format (version < 2.3.0)
+        if 'k?' in releases_found:
+            rename = input(
+                        f"{YELLOW}The dataset has an unspecified kmer value in the jellyfish file "
+                        "name, because it was created with an older version of kmerator. Kmerator "
+                        f"can rename the files to the new format before continuing [Yn]:{ENDCOL} "
+                        ).lower() or 'y'
             if rename == 'y':
                 self.rename_jf()
-                self.dataset = self.set_dataset_dict()
-                self.dataset_here()
+                releases_found, assembly, found = is_release_found(self)
+                
         ### Assign name to file attributes
         if found:
             basename = f"{self.args.specie}.{assembly}.{self.args.release}"
@@ -313,7 +320,7 @@ class Dataset:
         we must build him, downloading some files and rearange them.
         """
         ### Ask user to download files
-        valid = 'y' if self.args.yes else input(f"Dataset for release {self.args.release} ({self.args.specie}) not found, intall it? (Yn) ")
+        valid = 'y' if self.args.yes else input(f"Dataset for release {self.args.release} ({self.args.specie}) not found, install it? (Yn) ")
         if valid.lower() in ['n', 'no']:
             print("Exited by user.")
             exit.gracefully(self.args)
@@ -375,6 +382,21 @@ class Dataset:
             print(f" {YELLOW}Files not part of a dataset:{ENDCOL}")
             print(*[f"  - {i}" for i in self.dataset['other']], sep="\n")
         print()
+        
+        ### Find for dataset built by old version of kmerator, and propose to update the datasets
+        found = False
+        rename = 'n'
+        for species, releases in self.dataset['complete'].items():
+            if found: break
+            for release, values in releases.items():
+                if 'k?' in values:
+                    found = True
+                    rename = input(f"{YELLOW}\nSome releases has a kmer size not determined (k?) "
+                            "due to previous version of kmerator. Do you want to automatically "
+                            f"correct their size? [Yn]: {ENDCOL}").lower().strip() or 'y'
+                    break
+        if rename == 'y':
+            self.rename_jf()
 
         ### exit
         exit.gracefully(self.args)
@@ -497,6 +519,7 @@ class Dataset:
                         subprocess.check_output(cmd_set, shell=True)
                     except Exception as e:
                         sys.exit(e)
+        self.dataset = self.set_dataset_dict()          
 
 
 def usage():
