@@ -34,9 +34,13 @@ DEFAULT_CONFIG = """
 ## set kmer length (default: 31)
 # kmer_length = 31
 
-## --chimera
+## --max-on-transcriptome
 ## Only with --fasta-file option
-# chimera = False
+# --max-on-transcriptome = 0
+
+## --max-on-genome
+## Only with --fasta-file option
+# --max-on-genome = 1
 
 ## --stringent option
 ## Only with --selection option

@@ -199,7 +199,10 @@ def merged_results(args):
     if not os.path.isdir(os.path.join(args.tmpdir, 'kmers')):
         return None
     for item in ['kmers', 'contigs', 'masked']:
-        files = os.listdir(os.path.join(args.tmpdir, item))
+        try:
+            files = os.listdir(os.path.join(args.tmpdir, item))
+        except FileNotFoundError:
+            return
         if files:
             merged_file = os.path.join(args.output, f"{item}.fa")
             os.makedirs(args.output, exist_ok=True)
@@ -249,6 +252,11 @@ def show_report(args, report):
 
 
 def markdown_report(args, report):
+    sel_or_fa = 'selection' if args.selection else 'fasta_file'
+    to_report = [
+        sel_or_fa, 'datadir', 'genome', 'specie', 'kmer_length', 'release', 'stringent',
+        'max_on_transcriptome', 'max_on_genome', 'output', 'thread', 'keep', 'assembly',
+    ]
     os.makedirs(args.output, exist_ok=True)
     with open(os.path.join(args.output, 'report.md'), 'w') as fh:
         fh.write('# kmerator report\n')
@@ -258,7 +266,7 @@ def markdown_report(args, report):
         ### report command line and args, included defaults args
         cmd_args = ''
         for k,v in vars(args).items():
-            if v and k != 'jellyfish_genome':
+            if k in to_report:
                 k = k.replace('_', '-')
                 if isinstance(v, list):
                     v = ' '.join(v)

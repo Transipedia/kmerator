@@ -141,6 +141,7 @@ class SpecificKmers:
     def get_specific_kmers(self, item, kmercounts_transcriptome_dict, kmercounts_genome_dict, fasta_name):
         '''
         Keep only specific kmers, according to the arguments
+        Launched for each gene, transcript, or unanotated sequence
         '''
         args = copy.deepcopy(self.args)
         ### Define some variables: gene_name, transcript_name, variants_dic and output file names
@@ -350,13 +351,15 @@ class SpecificKmers:
             specific_contigs.append(f">{given_up}:{ENST}.contig_{c_nb} (at position {contig_pos})\n{contig}")
         elif level == "transcript" and contig:
             specific_contigs.append(f">{ENST}.contig_{c_nb} (at position {contig_pos})\n{contig}")
-
         if args['debug']:
             if args['selection']:
                 print(f"{YELLOW} {ENST} kmers/contig: {len(specific_kmers)}/{len(specific_contigs)} ({given}){ENDCOL}")
             else:
                 print(f"{YELLOW} {f_id} kmers/contig: {len(specific_kmers)}/{len(specific_contigs)}{ENDCOL}")
 
+        ### masked kmers
+        if masked_kmers:
+            self.write(args, masked_outfile, masked_kmers, 'masked')
 
         ### write kmer/contig files
         if specific_kmers:
@@ -368,8 +371,7 @@ class SpecificKmers:
             else:
                 mesg = f"{f_id}: no specific kmers found"
             return 'failed', mesg
-        ### masked kmers
-        self.write(args, masked_outfile, masked_kmers, 'masked')
+
         ### report
         if args['selection']:
             mesg = f"{given}: {item['symbol']}:{ENST} - kmers/contigs: {len(specific_kmers)}/{len(specific_contigs)} (level: {level})"
