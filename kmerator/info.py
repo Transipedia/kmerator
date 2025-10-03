@@ -15,7 +15,7 @@ CONTIBUTORS = [
     'Chloe BESSIERE chloe.bessiere@inserm.fr>'
     'Benoit GUIBERT <benoit.guibert@inserm.fr>',
 ]
-DOC = f"""
+DOC = rf"""
 -------------------------------------------------
                                    _
  ____  __.                        | |
@@ -30,7 +30,7 @@ DOC = f"""
 -------------------------------------------------
 """
 
-EXAMPLES = f"""
+EXAMPLES = """
 ------------------------------------------------------
 EXAMPLES:
 
