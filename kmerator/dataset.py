@@ -42,6 +42,8 @@ species = {
     "horse": "equus_caballus",
     "hen" : "gallus_gallus",
     "c.elegans": "caenorhabditis_elegans",
+    "droso": "drosophila_melanogaster",
+    # "e.coli": "escherichia_coli", # not in Ensembl
 }
 
 
@@ -157,7 +159,11 @@ class Dataset:
             return None
         soup = BeautifulSoup(r.text, 'lxml')
         core = [ a.text for a in soup.findAll('a') if a.text.startswith(f"{self.args.specie}_core")]
-        ebl_current_release = core[0].split('_')[-2]
+        try:
+            ebl_current_release = core[0].split('_')[-2]
+        except IndexError:
+            print(f"{YELLOW}ErrorSpecie: {self.args.specie} not found in Ensembl database.{ENDCOL}")
+            exit.gracefully(self.args)
         return ebl_current_release
 
 
@@ -251,12 +257,13 @@ class Dataset:
         def is_release_found(self):
             ### check if the specified release is present in the datasets
             releases_found = []
+            assembly = None
             for specie, releases in self.dataset['complete'].items():
                 if specie.startswith(self.args.specie):
                     assembly = specie.split('.')[1]
                     releases_found = releases.get(int(self.args.release), [])
-            if f"k{self.args.kmer_length}" in releases_found: 
-                return releases_found, assembly, True
+                    if f"k{self.args.kmer_length}" in releases_found: 
+                        return releases_found, assembly, True
             else:
                 return releases_found, assembly, False        
         releases_found, assembly, found = is_release_found(self)

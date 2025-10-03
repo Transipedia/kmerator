@@ -30,6 +30,10 @@ DEFAULT_CONFIG = """
 ## set a specie (default: human)
 # specie = human
 
+## --thread option
+## number of thread (default: 1)
+# thread = 1
+
 ## --kmer-length option
 ## set kmer length (default: 31)
 # kmer_length = 31
@@ -53,10 +57,6 @@ DEFAULT_CONFIG = """
 ## assumes 'yes' as the prompt answer, run non-interactively
 ## default: False
 # yes = True
-
-## --thread option
-## number of thread (default: 1)
-# thread = 1
 
 ## --keep option
 ## keep intermediate files (default: False)
