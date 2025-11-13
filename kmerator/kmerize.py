@@ -247,7 +247,7 @@ class SpecificKmers:
                             contig += mer[-1]
                             kmer_pos_prev = kmer_pos
                         else:                                           # store contig and create new
-                            specific_contigs.append(f">{given_up}:{transcript}.contig_{c_nb} (at position {kmer_pos})\n{contig}")
+                            specific_contigs.append(f">{given_up}:{ENST}.contig_{c_nb} (at position {kmer_pos})\n{contig}")
                             c_nb += 1
                             contig = mer
                             kmer_pos_prev = kmer_pos
