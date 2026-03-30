@@ -1,3 +1,7 @@
+[![Contact](https://img.shields.io/badge/Contact-Chloe_Bessière-lightgreen)](mailto:chloé.bessiere@inserm.fr)
+[![Contact](https://img.shields.io/badge/Contact-Anthony_Boureux-lightgreen)](mailto:anthony.boureux@inserm.fr)
+
+
 # Kmerator
 
 ## Prototype for decomposition of transcript or gene sequences and extraction of their specific k-mers
