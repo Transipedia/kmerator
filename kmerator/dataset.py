@@ -148,7 +148,7 @@ class Dataset:
 
     def get_ebl_current_release(self):
         """get number of last available release on Ensembl"""
-        url = os.path.join(self.base_url, "current_mysql")
+        url = os.path.join(self.base_url, "current/mysql")
         try:
             r = requests.get(url)
         except requests.exceptions.ConnectionError:
